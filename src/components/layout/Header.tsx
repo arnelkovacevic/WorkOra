@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import { PWAInstallButton } from './PWAInstallButton';
-import { OraWorkLogo } from '../ui/OraWorkLogo';
+import { WorkOraLogo } from '../ui/WorkOraLogo';
 
 interface HeaderProps {
   onOpenLogin?: () => void;
@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenLogin, onOpenRegister }) =
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
         {/* Brand & Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <OraWorkLogo 
+          <WorkOraLogo 
             iconSize="w-8 h-8 sm:w-9 sm:h-9" 
             textClassName="text-lg sm:text-xl font-black"
           />

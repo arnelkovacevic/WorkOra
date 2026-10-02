@@ -14,8 +14,8 @@ export default defineConfig(() => {
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
           id: '/',
-          name: 'OraWork — Radni Sati & Klijenti',
-          short_name: 'OraWork',
+          name: 'WorkOra — Radni Sati & Klijenti',
+          short_name: 'WorkOra',
           description: 'Aplikacija za jednostavan unos radnih sati, vođenje klijenata i obračun zarade.',
           theme_color: '#4F46E5',
           background_color: '#0F172A',

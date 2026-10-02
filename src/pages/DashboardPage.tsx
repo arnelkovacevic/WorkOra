@@ -254,7 +254,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
                   {userDisplayName}
                 </h1>
                 <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold border border-white/30 backdrop-blur-xs">
-                  OraWork
+                  WorkOra
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-indigo-100">
