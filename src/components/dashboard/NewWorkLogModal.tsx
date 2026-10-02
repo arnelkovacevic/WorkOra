@@ -17,9 +17,7 @@ import {
   Client, 
   WorkLog, 
   addWorkLog, 
-  calculateMinutes, 
-  formatMinutesToHours, 
-  formatCurrency 
+  calculateMinutes 
 } from '../../lib/supabaseService';
 
 interface NewWorkLogModalProps {
@@ -52,7 +50,6 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // Reset forme pri otvaranju
   useEffect(() => {
     if (isOpen) {
       setSelectionType(null);
@@ -67,7 +64,6 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
     }
   }, [isOpen, todayStr, clients]);
 
-  // Učitaj default rate za stalnog klijenta
   useEffect(() => {
     if (selectionType === 'permanent' && clientId) {
       const client = clients.find(c => c.id === clientId);
@@ -77,16 +73,6 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
       }
     }
   }, [selectionType, clientId, clients]);
-
-  const totalMinutes = useMemo(() => calculateMinutes(timeFrom, timeTo), [timeFrom, timeTo]);
-
-  const earnedAmount = useMemo(() => {
-    if (rateType === 'hourly') {
-      const hours = totalMinutes / 60;
-      return Math.round(hours * rateAmount * 100) / 100;
-    }
-    return rateAmount;
-  }, [rateType, rateAmount, totalMinutes]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,8 +94,8 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
       work_date: workDate,
       time_from: timeFrom,
       time_to: timeTo,
-      total_minutes: totalMinutes,
-      earned_amount: earnedAmount,
+      total_minutes: calculateMinutes(timeFrom, timeTo),
+      earned_amount: rateAmount,
       note: note.trim() || null,
       payment_type: rateType,
     });
@@ -123,31 +109,6 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
     }
   };
 
-  const SelectionScreen = () => (
-    <div className="grid grid-cols-1 gap-3">
-      <button
-        onClick={() => setSelectionType('permanent')}
-        className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 text-left hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all flex items-center gap-3"
-      >
-        <User className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-        <div>
-          <h4 className="font-bold text-sm text-slate-900 dark:text-white">{t('workLogs.permanent')}</h4>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('workLogs.permanentDesc')}</p>
-        </div>
-      </button>
-      <button
-        onClick={() => setSelectionType('occasional')}
-        className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 text-left hover:bg-purple-100 dark:hover:bg-purple-900 transition-all flex items-center gap-3"
-      >
-        <Briefcase className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-        <div>
-          <h4 className="font-bold text-sm text-slate-900 dark:text-white">{t('workLogs.occasional')}</h4>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('workLogs.occasionalDesc')}</p>
-        </div>
-      </button>
-    </div>
-  );
-
   return (
     <ModalWrapper
       isOpen={isOpen}
@@ -157,61 +118,55 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
       icon={selectionType ? <Clock className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
     >
       {selectionType === null ? (
-        <SelectionScreen />
+        <div className="grid grid-cols-1 gap-3">
+          <button onClick={() => setSelectionType('permanent')} className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 text-left transition-all">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">{t('workLogs.permanent')}</h4>
+          </button>
+          <button onClick={() => setSelectionType('occasional')} className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 text-left transition-all">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">{t('workLogs.occasional')}</h4>
+          </button>
+        </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <button 
-            type="button" 
-            onClick={() => setSelectionType(null)}
-            className="flex items-center text-xs text-slate-500 hover:text-indigo-600 mb-2"
-          >
-            <ChevronLeft className="w-4 h-4" /> {t('common.back')}
-          </button>
+          <button type="button" onClick={() => setSelectionType(null)} className="text-xs text-indigo-600 mb-2">{t('common.back')}</button>
           
           {selectionType === 'permanent' ? (
-             <select
-               value={clientId}
-               onChange={(e) => setClientId(e.target.value)}
-               className="input-field w-full"
-             >
+             <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="input-field w-full">
                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
              </select>
           ) : (
-            <input 
-              type="text" 
-              value={jobName} 
-              onChange={(e) => setJobName(e.target.value)} 
-              placeholder={t('workLogs.clientNameOrJob')}
-              className="input-field w-full"
-            />
+            <input type="text" value={jobName} onChange={(e) => setJobName(e.target.value)} placeholder={t('workLogs.clientNameOrJob')} className="input-field w-full" />
           )}
 
-          {/* Segmented Control */}
-          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+          <div className="grid grid-cols-3 gap-2">
             {(['hourly', 'daily', 'service'] as const).map(type => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setRateType(type)}
-                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg ${rateType === type ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-slate-500'}`}
-              >
+              <button key={type} type="button" onClick={() => setRateType(type)} className={`py-2 text-[10px] font-bold rounded-lg border ${rateType === type ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200'}`}>
                 {t(`workLogs.${type}`)}
               </button>
             ))}
           </div>
 
-          <input 
-            type="number" 
-            value={rateAmount} 
-            onChange={(e) => setRateAmount(Number(e.target.value))} 
-            placeholder={t('workLogs.rateAmount')}
-            className="input-field w-full"
-          />
+          <div>
+             <label className="text-xs font-semibold">{t('workLogs.rateAmount')}</label>
+             <div className="relative">
+                <input type="number" value={rateAmount} onChange={(e) => setRateAmount(Number(e.target.value))} className="input-field w-full pr-8" />
+                <span className="absolute right-3 top-3 text-sm text-slate-500">€</span>
+             </div>
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} className="input-field" />
-            <input type="time" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} className="input-field" />
+             <div>
+                <label className="text-xs font-semibold">Od</label>
+                <input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} className="input-field w-full" />
+             </div>
+             <div>
+                <label className="text-xs font-semibold">Do</label>
+                <input type="time" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} className="input-field w-full" />
+             </div>
           </div>
+
+          <label className="text-xs font-semibold">Bilješke</label>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} className="input-field w-full" rows={2} />
 
           <button type="submit" className="w-full btn-primary py-3">{t('common.save')}</button>
         </form>
