@@ -14,14 +14,18 @@ import {
   User, 
   Mail, 
   Smartphone,
-  Trash2
+  Trash2,
+  Globe
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { updateUserPassword } from '../lib/supabaseService';
 import { DeleteAccountModal } from '../components/settings/DeleteAccountModal';
+import { LanguageToggle } from '../components/layout/LanguageToggle';
 
 export const SettingsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { theme, isDark, toggleTheme, setTheme } = useTheme();
 
@@ -44,12 +48,12 @@ export const SettingsPage: React.FC = () => {
     setPasswordError(null);
 
     if (!newPassword || newPassword.length < 6) {
-      setPasswordError('Nova lozinka mora sadržavati minimalno 6 karaktera.');
+      setPasswordError(t('settings.passwordMinLength'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('Lozinke se ne podudaraju. Molimo provjerite unos.');
+      setPasswordError(t('settings.passwordMismatch'));
       return;
     }
 
@@ -58,12 +62,12 @@ export const SettingsPage: React.FC = () => {
     setPasswordLoading(false);
 
     if (res.success) {
-      setPasswordSuccess('Vaša lozinka je uspješno promijenjena!');
+      setPasswordSuccess(t('settings.passwordSuccess'));
       setNewPassword('');
       setConfirmPassword('');
       setTimeout(() => setPasswordSuccess(null), 4000);
     } else {
-      setPasswordError(res.error || 'Došlo je do greške pri promjeni lozinke.');
+      setPasswordError(res.error || t('settings.passwordError'));
     }
   };
 
@@ -76,18 +80,21 @@ export const SettingsPage: React.FC = () => {
     <div className="space-y-6 pb-28 sm:pb-24 max-w-4xl mx-auto">
       {/* Naslov sekcije */}
       <div className="space-y-1">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
-            <Settings className="w-5 h-5" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
+              <Settings className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                {t('settings.title')}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                {t('settings.subtitle')}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Postavke
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Upravljajte profilom, temom aplikacije i sigurnosnim opcijama
-            </p>
-          </div>
+          <LanguageToggle variant="button" />
         </div>
       </div>
 
@@ -106,7 +113,7 @@ export const SettingsPage: React.FC = () => {
               <span>{user?.email}</span>
             </p>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 mt-1 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-200 dark:border-indigo-800">
-              WorkOra Račun
+              {t('settings.account')}
             </span>
           </div>
         </div>
@@ -122,10 +129,10 @@ export const SettingsPage: React.FC = () => {
               ) : (
                 <Sun className="w-4 h-4 text-amber-500" />
               )}
-              <span>Izgled i Tema</span>
+              <span>{t('settings.appearance')}</span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Prilagodite prikaz aplikacije prema ambijentalnom osvjetljenju
+              {t('settings.appearanceDesc')}
             </p>
           </div>
 
@@ -168,8 +175,8 @@ export const SettingsPage: React.FC = () => {
                 <Sun className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-xs font-bold">Svijetla tema</p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400">Dan / Visok kontrast</p>
+                <p className="text-xs font-bold">{t('settings.lightTheme')}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">{t('settings.lightThemeDesc')}</p>
               </div>
             </div>
             {!isDark && <CheckCircle2 className="w-4 h-4 text-indigo-600" />}
@@ -189,8 +196,8 @@ export const SettingsPage: React.FC = () => {
                 <Moon className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-xs font-bold">Tamna tema</p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400">Noć / Štednja baterije</p>
+                <p className="text-xs font-bold">{t('settings.darkTheme')}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">{t('settings.darkThemeDesc')}</p>
               </div>
             </div>
             {isDark && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
@@ -203,10 +210,10 @@ export const SettingsPage: React.FC = () => {
         <div className="space-y-0.5">
           <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <KeyRound className="w-4 h-4 text-indigo-500" />
-            <span>Sigurnost i Promjena Lozinke</span>
+            <span>{t('settings.security')}</span>
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Ažurirajte vašu pristupnu lozinku za prijavu na WorkOra račun
+            {t('settings.securityDesc')}
           </p>
         </div>
 
@@ -314,10 +321,10 @@ export const SettingsPage: React.FC = () => {
           </div>
           <div className="space-y-1">
             <h3 className="text-sm sm:text-base font-bold text-rose-900 dark:text-rose-300">
-              Opasna zona — Brisanje naloga
+              {t('settings.dangerZone')}
             </h3>
             <p className="text-xs text-rose-700/80 dark:text-rose-300/80 leading-relaxed max-w-xl">
-              Trajnim brisanjem naloga nepovratno se uklanjaju svi vaši radni sati, klijenti, tarife i rasporedi iz agende. Ova radnja se ne može poništiti.
+              {t('settings.dangerZoneDesc')}
             </p>
           </div>
         </div>
@@ -329,7 +336,7 @@ export const SettingsPage: React.FC = () => {
             className="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 flex items-center gap-1.5 transition-all active:scale-95"
           >
             <Trash2 className="w-4 h-4" />
-            <span>Obriši moj nalog</span>
+            <span>{t('settings.deleteMyAccount')}</span>
           </button>
         </div>
       </div>

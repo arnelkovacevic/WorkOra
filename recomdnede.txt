@@ -1,0 +1,6 @@
+Pogledajte detaljan vodič u fajlu "recommended.txt" ili pokrenite:
+
+npm install
+npm run dev
+
+Za listu svih biblioteka i detaljna uputstva otvorite recommended.txt.

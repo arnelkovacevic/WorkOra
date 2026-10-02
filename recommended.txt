@@ -1,0 +1,61 @@
+================================================================================
+                    ORAWORK PWA - VODIČ ZA LOKALNU INSTALACIJU
+================================================================================
+
+Za pokretanje aplikacije lokalno na svom računaru, potrebno je imati instaliran:
+- Node.js (verzija 18 ili novija) -> https://nodejs.org
+- npm (dolazi uz Node.js)
+
+--------------------------------------------------------------------------------
+1. KORAK: PREUZIMANJE KODA I ULAZAK U DIREKTORIJ
+--------------------------------------------------------------------------------
+Otvorite terminal (Command Prompt, PowerShell ili Bash) i pozicionirajte se u folder projekta:
+cd orawork-app
+
+--------------------------------------------------------------------------------
+2. KORAK: INSTALACIJA SVIH BIBLIOTEKA (DEPENDENCIES)
+--------------------------------------------------------------------------------
+Pokrenite jednu od sljedeće dvije komande za automatsku instalaciju svih zavisnosti:
+
+npm install
+
+ili ako želite instalirati tačne pakete pojedinačno:
+
+npm install react react-dom react-router-dom lucide-react @supabase/supabase-js jspdf jspdf-autotable i18next react-i18next i18next-browser-languagedetector vite-plugin-pwa
+
+Dev zavisnosti (za kompajliranje i TypeScript):
+npm install -D vite @vitejs/plugin-react typescript @types/react @types/react-dom @types/node tailwindcss @tailwindcss/vite
+
+--------------------------------------------------------------------------------
+3. KORAK: POKRETANJE DEVELOPMENT SERVERA
+--------------------------------------------------------------------------------
+Pokrenite komandu:
+
+npm run dev
+
+Aplikacija će se pokrenuti na:
+http://localhost:3000 (ili http://localhost:5173 u zavisnosti od konfiguracije)
+
+--------------------------------------------------------------------------------
+4. KORAK: BUILD ZA PRODUKCIJU (PWA DEPLOYMENT)
+--------------------------------------------------------------------------------
+Za kreiranje optimizovanog produkcijskog koda:
+
+npm run build
+
+Za pregled build verzije:
+npm run preview
+
+--------------------------------------------------------------------------------
+5. POPIS KLJUČNIH BIBLIOTEKA KOJE APLIKACIJA KORISTI:
+--------------------------------------------------------------------------------
+1. react / react-dom (v18+)             - Glavni korisnički interfejs
+2. react-router-dom                     - SPA navigacija i rute
+3. lucide-react                         - Moderne vektorske SVG ikonice
+4. @supabase/supabase-js                - Autentifikacija i PostgreSQL baza podataka
+5. i18next / react-i18next             - Višejezična podrška (Bosanski i Italijanski)
+6. i18next-browser-languagedetector     - Automatska detekcija i pamćenje jezika
+7. jspdf / jspdf-autotable              - Generisanje profesionalnih PDF izvještaja
+8. vite-plugin-pwa                      - Progressive Web App offline podrška i Service Worker
+9. tailwindcss                          - Stilizovanje komponenti (Svijetla / Tamna tema)
+================================================================================

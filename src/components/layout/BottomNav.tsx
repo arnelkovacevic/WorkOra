@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, Clock, Calendar, Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export type DashboardTab = 'overview' | 'clients' | 'work_logs' | 'agenda' | 'settings';
 
@@ -18,6 +19,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   clientsCount = 0,
   isHidden = false,
 }) => {
+  const { t } = useTranslation();
+
   // Automatsko osluškivanje body 'modal-open' klase
   const [isBodyModalOpen, setIsBodyModalOpen] = useState(false);
 
@@ -39,31 +42,31 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const tabs = [
     {
       id: 'overview' as DashboardTab,
-      label: 'Panel',
+      label: t('nav.panel'),
       icon: LayoutDashboard,
       badge: null,
     },
     {
       id: 'clients' as DashboardTab,
-      label: 'Klijenti',
+      label: t('nav.clients'),
       icon: Users,
       badge: clientsCount > 0 ? clientsCount : null,
     },
     {
       id: 'work_logs' as DashboardTab,
-      label: 'Sati',
+      label: t('nav.workLogs'),
       icon: Clock,
       badge: workLogsCount > 0 ? workLogsCount : null,
     },
     {
       id: 'agenda' as DashboardTab,
-      label: 'Kalendar',
+      label: t('nav.calendar'),
       icon: Calendar,
       badge: null,
     },
     {
       id: 'settings' as DashboardTab,
-      label: 'Postavke',
+      label: t('nav.settings'),
       icon: Settings,
       badge: null,
     },

@@ -47,6 +47,7 @@ import { AgendaCalendar } from '../components/dashboard/AgendaCalendar';
 import { NewAgendaModal } from '../components/dashboard/NewAgendaModal';
 import { BottomNav, DashboardTab } from '../components/layout/BottomNav';
 import { SettingsPage } from './SettingsPage';
+import { useTranslation } from 'react-i18next';
 
 interface DashboardPageProps {
   initialTab?: DashboardTab;
@@ -54,6 +55,7 @@ interface DashboardPageProps {
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'overview' }) => {
   const { user, signOut, setIsWelcomeModalOpen } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // 5 Glavnih tabova: 'overview' (Panel), 'clients' (Klijenti), 'work_logs' (Sati), 'agenda' (Kalendar), 'settings' (Postavke)
@@ -252,7 +254,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
                   {userDisplayName}
                 </h1>
                 <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold border border-white/30 backdrop-blur-xs">
-                  WorkOra
+                  OraWork
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-indigo-100">
@@ -269,14 +271,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
               title="Otvori mjesečni izvještaj rada i preuzmi PDF"
             >
               <FileText className="w-3.5 h-3.5 text-indigo-200" />
-              <span>Izvještaj & PDF</span>
+              <span>{t('overview.reportPdf')}</span>
             </button>
             <button
               onClick={() => loadData(true)}
               disabled={refreshing}
               type="button"
               className="p-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white transition-all text-xs"
-              title="Osvježi podatke"
+              title={t('overview.refresh')}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
@@ -284,10 +286,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
               onClick={() => setIsWelcomeModalOpen(true)}
               type="button"
               className="p-2 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white transition-all flex items-center justify-center gap-1"
-              title="Pomoć i informacije"
+              title={t('overview.info')}
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden sm:inline">Info</span>
+              <span className="hidden sm:inline">{t('overview.info')}</span>
             </button>
             <button
               onClick={async () => {
@@ -296,82 +298,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
               }}
               type="button"
               className="p-2 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-xl bg-rose-500/80 hover:bg-rose-600 border border-rose-400/30 text-white transition-all flex items-center justify-center gap-1"
-              title="Odjavi se"
+              title={t('nav.logout')}
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Odjava</span>
+              <span className="hidden sm:inline">{t('nav.logout')}</span>
             </button>
           </div>
         </div>
 
         {/* Ambient svetlo */}
         <div className="absolute -bottom-8 -right-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-      </div>
-
-      {/* STATISTIČKE KARTICE (Prikazuju se na vrhu Panela) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* 1. Ukupno Zarađeno */}
-        <div 
-          onClick={() => setActiveTab('work_logs')}
-          className="cursor-pointer p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-emerald-300 dark:hover:border-emerald-700 transition-all flex items-center justify-between"
-        >
-          <div className="space-y-0.5">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Ukupno Zarađeno
-            </span>
-            <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
-              {formatCurrency(stats.totalEarned)}
-            </div>
-            <span className="text-[10px] text-slate-400 block">
-              Na osnovu {workLogs.length} radnih unosa
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-            <DollarSign className="w-5 h-5" />
-          </div>
-        </div>
-
-        {/* 2. Ukupno Sati */}
-        <div 
-          onClick={() => setActiveTab('work_logs')}
-          className="cursor-pointer p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-700 transition-all flex items-center justify-between"
-        >
-          <div className="space-y-0.5">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Ukupno Sati
-            </span>
-            <div className="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight">
-              {formatMinutesToHours(stats.totalMinutes)}
-            </div>
-            <span className="text-[10px] text-slate-400 block">
-              {stats.totalMinutes} evidentiranih minuta
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
-            <Clock className="w-5 h-5" />
-          </div>
-        </div>
-
-        {/* 3. Aktivni Klijenti */}
-        <div 
-          onClick={() => setActiveTab('clients')}
-          className="cursor-pointer p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-purple-300 dark:hover:border-purple-700 transition-all flex items-center justify-between"
-        >
-          <div className="space-y-0.5">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Aktivni Klijenti
-            </span>
-            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              {stats.totalClientsCount}
-            </div>
-            <span className="text-[10px] text-slate-400 block">
-              Definisane tarife i klijenti
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
-            <Users className="w-5 h-5" />
-          </div>
-        </div>
       </div>
 
       {/* DESKTOP & TABLET TAB TRAKA (Sinhronizovana sa donjom navigacijom) */}
@@ -387,7 +323,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
             }`}
           >
             <LayoutDashboard className="w-4 h-4" />
-            <span>Panel</span>
+            <span>{t('nav.panel')}</span>
           </button>
 
           <button
@@ -400,7 +336,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
             }`}
           >
             <Users className="w-4 h-4" />
-            <span>Klijenti</span>
+            <span>{t('nav.clients')}</span>
             <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold">
               {clients.length}
             </span>
@@ -416,7 +352,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
             }`}
           >
             <Clock className="w-4 h-4" />
-            <span>Sati</span>
+            <span>{t('nav.workLogs')}</span>
             <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold">
               {workLogs.length}
             </span>
@@ -432,7 +368,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
             }`}
           >
             <Calendar className="w-4 h-4" />
-            <span>Kalendar</span>
+            <span>{t('nav.calendar')}</span>
           </button>
 
           <button
@@ -445,7 +381,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
             }`}
           >
             <Settings className="w-4 h-4" />
-            <span>Postavke</span>
+            <span>{t('nav.settings')}</span>
           </button>
         </div>
 
@@ -458,7 +394,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
               className="btn-primary py-2 px-3.5 text-xs font-bold shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              <span>Novi Unos Sati</span>
+              <span>{t('workLogs.addNew')}</span>
             </button>
           ) : activeTab === 'clients' ? (
             <button
@@ -467,7 +403,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
               className="btn-primary py-2 px-3.5 text-xs font-bold shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              <span>Novi Klijent</span>
+              <span>{t('clients.addNew')}</span>
             </button>
           ) : activeTab === 'agenda' ? (
             <button
@@ -476,17 +412,82 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
               className="btn-primary py-2 px-3.5 text-xs font-bold shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              <span>Zakaži Termin</span>
+              <span>{t('agenda.addNew')}</span>
             </button>
           ) : null}
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. TAB: PANEL (Brze akcije, sažetak, i zadnje aktivnosti) */}
+      {/* 1. TAB: PANEL (Samo na ovom tabu stoje 3 statističke kartice, brze akcije i sažetak) */}
       {/* ========================================================================= */}
       {activeTab === 'overview' && (
         <div className="space-y-5 animate-in fade-in duration-200">
+          {/* STATISTIČKE KARTICE - Prikazuju se ISKLJUČIVO na početnoj (Home / Panel) strani */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* 1. Ukupno Zarađeno */}
+            <div 
+              onClick={() => setActiveTab('work_logs')}
+              className="cursor-pointer p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-emerald-300 dark:hover:border-emerald-700 transition-all flex items-center justify-between"
+            >
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  {t('stats.totalEarned')}
+                </span>
+                <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                  {formatCurrency(stats.totalEarned)}
+                </div>
+                <span className="text-[10px] text-slate-400 block">
+                  {t('stats.basedOnLogs', { count: workLogs.length })}
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                <DollarSign className="w-5 h-5" />
+              </div>
+            </div>
+
+            {/* 2. Ukupno Sati */}
+            <div 
+              onClick={() => setActiveTab('work_logs')}
+              className="cursor-pointer p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-700 transition-all flex items-center justify-between"
+            >
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  {t('stats.totalHours')}
+                </span>
+                <div className="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight">
+                  {formatMinutesToHours(stats.totalMinutes)}
+                </div>
+                <span className="text-[10px] text-slate-400 block">
+                  {t('stats.recordedMinutes', { count: stats.totalMinutes })}
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+            </div>
+
+            {/* 3. Aktivni Klijenti */}
+            <div 
+              onClick={() => setActiveTab('clients')}
+              className="cursor-pointer p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-purple-300 dark:hover:border-purple-700 transition-all flex items-center justify-between"
+            >
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  {t('stats.activeClients')}
+                </span>
+                <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {stats.totalClientsCount}
+                </div>
+                <span className="text-[10px] text-slate-400 block">
+                  {t('stats.withActiveRates')}
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+            </div>
+          </div>
           {/* Brze akcije na dodir (Quick Actions Grid) */}
           <div>
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2 px-0.5">
@@ -571,7 +572,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-indigo-500" />
                   <h3 className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
-                    Posljednji Radni Unosi
+                    {t('overview.recentLogs')}
                   </h3>
                 </div>
                 <button
@@ -579,14 +580,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
                   type="button"
                   className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
                 >
-                  <span>Svi sati</span>
+                  <span>{t('overview.viewAllLogs')}</span>
                   <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
 
               {recentLogs.length === 0 ? (
                 <div className="text-center py-6 text-slate-400 text-xs">
-                  Još nema evidentiranih poslova.
+                  {t('overview.noRecentLogs')}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -618,7 +619,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-amber-500" />
                   <h3 className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
-                    Predstojeći Termini (Agenda)
+                    {t('overview.upcomingAgenda')}
                   </h3>
                 </div>
                 <button
@@ -626,14 +627,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
                   type="button"
                   className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
                 >
-                  <span>Kalendar</span>
+                  <span>{t('nav.calendar')}</span>
                   <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
 
               {upcomingAgenda.length === 0 ? (
                 <div className="text-center py-6 text-slate-400 text-xs">
-                  Nema zakazanih termina za naredni period.
+                  {t('overview.noUpcomingAgenda')}
                 </div>
               ) : (
                 <div className="space-y-2">

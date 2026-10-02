@@ -921,34 +921,45 @@ export async function deleteUserAccount(password: string): Promise<{ success: bo
         return { success: false, error: 'Netačna lozinka. Molimo provjerite unos.' };
       }
 
-      // 2. Brisanje podataka korisnika iz baze
+      // 2. Brisanje podataka korisnika iz baze iz tri tabele (agenda_events, work_logs, clients)
       await supabase.from('agenda_events').delete().eq('user_id', userId);
       await supabase.from('work_logs').delete().eq('user_id', userId);
       await supabase.from('clients').delete().eq('user_id', userId);
 
+      // 3. Pokušaj brisanja iz Supabase auth.users preko RPC ako je funkcija definisana
       try {
         await supabase.rpc('delete_user');
       } catch {
-        // ako rpc ne postoji, kaskada je odradila podatke
+        try {
+          await supabase.rpc('delete_current_user');
+        } catch {
+          // Nastavi sa odjavom
+        }
       }
 
       await supabase.auth.signOut();
       return { success: true };
     } else {
       // Demo mod brisanje
-      const userRaw = localStorage.getItem('workora_demo_user') || localStorage.getItem('mojpwa_demo_user');
+      const userRaw = localStorage.getItem('orawork_demo_user') || 
+                      localStorage.getItem('workora_demo_user') || 
+                      localStorage.getItem('mojpwa_demo_user');
       if (userRaw) {
         const u = JSON.parse(userRaw);
         if (u.password && u.password !== password) {
           return { success: false, error: 'Netačna lozinka. Molimo unesite ispravnu lozinku.' };
         }
       }
+      localStorage.removeItem('orawork_demo_user');
       localStorage.removeItem('workora_demo_user');
       localStorage.removeItem('mojpwa_demo_user');
+      localStorage.removeItem('orawork_clients_data');
       localStorage.removeItem('workora_clients_data');
       localStorage.removeItem('mojpwa_clients_data');
+      localStorage.removeItem('orawork_worklogs_data');
       localStorage.removeItem('workora_worklogs_data');
       localStorage.removeItem('mojpwa_worklogs_data');
+      localStorage.removeItem('orawork_agenda_data');
       localStorage.removeItem('workora_agenda_data');
       localStorage.removeItem('mojpwa_agenda_data');
       return { success: true };
