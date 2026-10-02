@@ -175,7 +175,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
       setWorkLogs((prev) => prev.filter((l) => l.id !== id));
       showToast('Radni unos je uspješno obrisan.');
     } else {
-      showToast(res.error || 'Nije uspjelo brisanje unosa.');
+      showToast(res.error || 'Nije uspjelo brisanje unosa!');
     }
   };
 
