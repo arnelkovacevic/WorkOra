@@ -28,7 +28,8 @@ import {
   formatMinutesToHours, 
   formatWorkDate, 
   BOSNIAN_MONTHS,
-  calculateMinutes 
+  calculateMinutes,
+  parseAgendaDescription
 } from '../../lib/supabaseService';
 import { NewAgendaModal } from './NewAgendaModal';
 
@@ -351,7 +352,8 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
             </div>
           ) : (
             selectedDateEvents.map((item) => {
-              const clientName = item.clients?.name || 'Nepoznat klijent';
+              const parsed = parseAgendaDescription(item.task_description);
+              const clientName = parsed.isTemporary ? (parsed.tempClientName || 'Povremeni klijent') : (item.clients?.name || 'Nepoznat klijent');
               const isCompleted = item.status === 'completed';
               const isCancelled = item.status === 'cancelled';
               const isPending = item.status === 'scheduled';
@@ -401,10 +403,14 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
                         <span className="font-medium text-slate-700 dark:text-slate-300">
                           {formatMinutesToHours(minutes)}
                         </span>
+                        <span>•</span>
+                        <span className="font-bold text-[10px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-lg border border-indigo-100/50 dark:border-indigo-900/40 capitalize">
+                          {parsed.typeWorks}
+                        </span>
                       </div>
 
                       <p className="text-xs font-medium text-slate-700 dark:text-slate-300 pt-0.5">
-                        {item.task_description}
+                        {parsed.cleanDescription}
                       </p>
                     </div>
 

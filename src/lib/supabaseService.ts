@@ -19,6 +19,8 @@ export interface WorkLog {
   total_minutes: number;
   earned_amount: number;
   note?: string | null;
+  temp_client_name?: string | null;
+  type_works?: string | null;
   created_at: string;
   clients?: Client | null;
 }
@@ -284,6 +286,29 @@ export async function deleteClient(id: string): Promise<{ success: boolean; erro
 // -------------------------------------------------------------
 
 /**
+ * Pomoćna funkcija za mapiranje privremenih klijenata u virtuelne klijentske objekte
+ */
+export function mapWorkLogClients(log: WorkLog): WorkLog {
+  if (log && log.temp_client_name) {
+    return {
+      ...log,
+      clients: log.clients ? {
+        ...log.clients,
+        name: log.temp_client_name
+      } : {
+        id: log.client_id,
+        user_id: log.user_id,
+        name: log.temp_client_name,
+        rate_type: 'hourly',
+        rate_amount: 0,
+        created_at: log.created_at
+      }
+    };
+  }
+  return log;
+}
+
+/**
  * Dohvata sve radne sate / poslove logovanog korisnika
  */
 export async function getWorkLogs(): Promise<{ data: WorkLog[] | null; error: string | null }> {
@@ -298,7 +323,8 @@ export async function getWorkLogs(): Promise<{ data: WorkLog[] | null; error: st
       if (error) {
         return { data: null, error: error.message };
       }
-      return { data: (data as WorkLog[]) || [], error: null };
+      const mapped = (data as WorkLog[] || []).map(mapWorkLogClients);
+      return { data: mapped, error: null };
     } else {
       // Demo mod
       const logs = getLocalWorkLogs();
@@ -307,7 +333,7 @@ export async function getWorkLogs(): Promise<{ data: WorkLog[] | null; error: st
       const joinedLogs = logs.map((log) => ({
         ...log,
         clients: clients.find((c) => c.id === log.client_id) || log.clients || null,
-      }));
+      })).map(mapWorkLogClients);
       return { data: joinedLogs, error: null };
     }
   } catch (err: unknown) {
@@ -327,6 +353,8 @@ export async function addWorkLog(logData: {
   total_minutes: number;
   earned_amount: number;
   note?: string | null;
+  temp_client_name?: string | null;
+  type_works?: string | null;
 }): Promise<{ data: WorkLog | null; error: string | null }> {
   try {
     if (isSupabaseConfigured) {
@@ -341,6 +369,8 @@ export async function addWorkLog(logData: {
             total_minutes: Number(logData.total_minutes),
             earned_amount: Number(logData.earned_amount),
             note: logData.note?.trim() || null,
+            temp_client_name: logData.temp_client_name?.trim() || null,
+            type_works: logData.type_works || null,
           },
         ])
         .select('*, clients(*)')
@@ -349,7 +379,7 @@ export async function addWorkLog(logData: {
       if (error) {
         return { data: null, error: error.message };
       }
-      return { data: data as WorkLog, error: null };
+      return { data: mapWorkLogClients(data as WorkLog), error: null };
     } else {
       // Demo mod
       const clients = getLocalClients();
@@ -365,6 +395,8 @@ export async function addWorkLog(logData: {
         total_minutes: Number(logData.total_minutes),
         earned_amount: Number(logData.earned_amount),
         note: logData.note?.trim() || null,
+        temp_client_name: logData.temp_client_name?.trim() || null,
+        type_works: logData.type_works || null,
         created_at: new Date().toISOString(),
         clients: matchedClient,
       };
@@ -372,7 +404,7 @@ export async function addWorkLog(logData: {
       const current = getLocalWorkLogs();
       const updated = [newLog, ...current];
       saveLocalWorkLogs(updated);
-      return { data: newLog, error: null };
+      return { data: mapWorkLogClients(newLog), error: null };
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Greška pri dodavanju unosa rada';
@@ -429,7 +461,8 @@ export async function getWorkLogsByClientAndMonth(
       if (error) {
         return { data: null, error: error.message };
       }
-      return { data: (data as WorkLog[]) || [], error: null };
+      const mapped = (data as WorkLog[] || []).map(mapWorkLogClients);
+      return { data: mapped, error: null };
     } else {
       const allLogs = getLocalWorkLogs();
       const clients = getLocalClients();
@@ -439,6 +472,7 @@ export async function getWorkLogsByClientAndMonth(
           ...l,
           clients: clients.find((c) => c.id === l.client_id) || l.clients || null,
         }))
+        .map(mapWorkLogClients)
         .sort((a, b) => a.work_date.localeCompare(b.work_date) || a.time_from.localeCompare(b.time_from));
 
       return { data: filtered, error: null };
@@ -474,7 +508,8 @@ export async function getWorkLogsByMonth(
       if (error) {
         return { data: null, error: error.message };
       }
-      return { data: (data as WorkLog[]) || [], error: null };
+      const mapped = (data as WorkLog[] || []).map(mapWorkLogClients);
+      return { data: mapped, error: null };
     } else {
       const allLogs = getLocalWorkLogs();
       const clients = getLocalClients();
@@ -484,6 +519,7 @@ export async function getWorkLogsByMonth(
           ...l,
           clients: clients.find((c) => c.id === l.client_id) || l.clients || null,
         }))
+        .map(mapWorkLogClients)
         .sort((a, b) => a.work_date.localeCompare(b.work_date) || a.time_from.localeCompare(b.time_from));
 
       return { data: filtered, error: null };
@@ -757,14 +793,26 @@ export async function convertAgendaToWorkLog(agendaId: string): Promise<{
       return { success: false, workLog: null, error: 'Nije moguće učitati podatke termina' };
     }
 
-    // 2. Izračunaj trajanje i zaradu
+    // 2. Parsiraj opis zakazanog termina da dobiješ potencijalnog privremenog klijenta i tip obračuna
+    const parsed = parseAgendaDescription(agendaItem.task_description);
     const totalMinutes = calculateMinutes(agendaItem.time_from, agendaItem.time_to);
+    
     let earnedAmount = 0;
-    if (client) {
-      if (client.rate_type === 'daily') {
-        earnedAmount = Number(client.rate_amount);
+    const rateType = parsed.typeWorks === 'po satu' ? 'hourly' : parsed.typeWorks === 'dnevno' ? 'daily' : 'service';
+
+    if (parsed.isTemporary) {
+      const rate = parsed.tempRateAmount || 0;
+      if (rateType === 'daily' || rateType === 'service') {
+        earnedAmount = rate;
       } else {
-        earnedAmount = Math.round(((totalMinutes / 60) * Number(client.rate_amount)) * 100) / 100;
+        earnedAmount = Math.round(((totalMinutes / 60) * rate) * 100) / 100;
+      }
+    } else if (client) {
+      const rate = Number(client.rate_amount);
+      if (rateType === 'daily' || rateType === 'service') {
+        earnedAmount = rate;
+      } else {
+        earnedAmount = Math.round(((totalMinutes / 60) * rate) * 100) / 100;
       }
     }
 
@@ -776,7 +824,9 @@ export async function convertAgendaToWorkLog(agendaId: string): Promise<{
       time_to: agendaItem.time_to,
       total_minutes: totalMinutes,
       earned_amount: earnedAmount,
-      note: agendaItem.task_description,
+      note: parsed.cleanDescription,
+      temp_client_name: parsed.tempClientName || null,
+      type_works: parsed.typeWorks,
     });
 
     if (logRes.error || !logRes.data) {
@@ -968,5 +1018,55 @@ export async function deleteUserAccount(password: string): Promise<{ success: bo
     const msg = err instanceof Error ? err.message : 'Greška pri brisanju korisničkog naloga.';
     return { success: false, error: msg };
   }
+}
+
+export interface ParsedAgendaEvent {
+  isTemporary: boolean;
+  tempClientName?: string | null;
+  typeWorks: string;
+  tempRateAmount?: number;
+  cleanDescription: string;
+}
+
+export function parseAgendaDescription(description: string): ParsedAgendaEvent {
+  const result: ParsedAgendaEvent = {
+    isTemporary: false,
+    tempClientName: null,
+    typeWorks: 'po satu',
+    tempRateAmount: 0,
+    cleanDescription: description || '',
+  };
+
+  if (!description) return result;
+
+  let workingDesc = description;
+
+  // Check for [Povremeni: Name]
+  const povremeniRegex = /\[Povremeni:\s*([^\]]+)\]/;
+  const povMatch = workingDesc.match(povremeniRegex);
+  if (povMatch) {
+    result.isTemporary = true;
+    result.tempClientName = povMatch[1].trim();
+    workingDesc = workingDesc.replace(povremeniRegex, '').trim();
+  }
+
+  // Check for [Tip: Type]
+  const tipRegex = /\[Tip:\s*([^\]]+)\]/;
+  const tipMatch = workingDesc.match(tipRegex);
+  if (tipMatch) {
+    result.typeWorks = tipMatch[1].trim();
+    workingDesc = workingDesc.replace(tipRegex, '').trim();
+  }
+
+  // Check for [Cijena: Amount]
+  const cijenaRegex = /\[Cijena:\s*([^\]]+)\]/;
+  const cijenaMatch = workingDesc.match(cijenaRegex);
+  if (cijenaMatch) {
+    result.tempRateAmount = Number(cijenaMatch[1]) || 0;
+    workingDesc = workingDesc.replace(cijenaRegex, '').trim();
+  }
+
+  result.cleanDescription = workingDesc;
+  return result;
 }
 

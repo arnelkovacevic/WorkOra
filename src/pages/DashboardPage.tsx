@@ -150,9 +150,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
   const filteredWorkLogs = useMemo(() => {
     return workLogs.filter((log) => {
       const clientName = log.clients?.name?.toLowerCase() || '';
+      const tempClientName = log.temp_client_name?.toLowerCase() || '';
+      const typeWorks = log.type_works?.toLowerCase() || '';
       const noteText = log.note?.toLowerCase() || '';
       const matchesSearch =
         clientName.includes(searchQuery.toLowerCase()) ||
+        tempClientName.includes(searchQuery.toLowerCase()) ||
+        typeWorks.includes(searchQuery.toLowerCase()) ||
         noteText.includes(searchQuery.toLowerCase()) ||
         log.work_date.includes(searchQuery);
 

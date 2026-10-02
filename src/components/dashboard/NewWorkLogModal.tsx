@@ -46,7 +46,8 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
   // Zajednička i specifična stanja
   const [clientId, setClientId] = useState<string>('');
   const [tempClientName, setTempClientName] = useState<string>('');
-  const [tempRateType, setTempRateType] = useState<'hourly' | 'daily'>('hourly');
+  const [tempRateType, setTempRateType] = useState<'hourly' | 'daily' | 'service'>('hourly');
+  const [permRateType, setPermRateType] = useState<'hourly' | 'daily' | 'service'>('hourly');
   const [tempRateAmount, setTempRateAmount] = useState<string>('15');
 
   const [workDate, setWorkDate] = useState<string>(todayStr);
@@ -84,6 +85,12 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
     return clients.find((c) => c.id === clientId) || null;
   }, [clients, clientId]);
 
+  useEffect(() => {
+    if (selectedClient) {
+      setPermRateType(selectedClient.rate_type === 'hourly' ? 'hourly' : 'daily');
+    }
+  }, [selectedClient]);
+
   // Real-time izračun minuta
   const totalMinutes = useMemo(() => {
     return calculateMinutes(timeFrom, timeTo);
@@ -93,21 +100,22 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
   const earnedAmount = useMemo(() => {
     if (modalMode === 'permanent') {
       if (!selectedClient) return 0;
-      if (selectedClient.rate_type === 'daily') {
-        return Number(selectedClient.rate_amount);
+      const rate = Number(selectedClient.rate_amount);
+      if (permRateType === 'daily' || permRateType === 'service') {
+        return rate;
       }
       const hours = totalMinutes / 60;
-      return Math.round(hours * Number(selectedClient.rate_amount) * 100) / 100;
+      return Math.round(hours * rate * 100) / 100;
     } else if (modalMode === 'temporary') {
       const rate = Number(tempRateAmount) || 0;
-      if (tempRateType === 'daily') {
+      if (tempRateType === 'daily' || tempRateType === 'service') {
         return rate;
       }
       const hours = totalMinutes / 60;
       return Math.round(hours * rate * 100) / 100;
     }
     return 0;
-  }, [modalMode, selectedClient, totalMinutes, tempRateAmount, tempRateType]);
+  }, [modalMode, selectedClient, totalMinutes, tempRateAmount, tempRateType, permRateType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,6 +161,10 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
       total_minutes: totalMinutes,
       earned_amount: earnedAmount,
       note: finalNote,
+      temp_client_name: modalMode === 'temporary' ? tempClientName.trim() : null,
+      type_works: modalMode === 'permanent'
+        ? (permRateType === 'hourly' ? 'po satu' : permRateType === 'daily' ? 'dnevno' : 'po usluzi')
+        : (tempRateType === 'hourly' ? 'po satu' : tempRateType === 'daily' ? 'dnevno' : 'po usluzi')
     });
 
     setLoading(false);
@@ -257,38 +269,56 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
 
           {/* ----- STALNI KLIJENT SPECIFIČNO ----- */}
           {modalMode === 'permanent' && (
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Klijent <span className="text-rose-500">*</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onOpenNewClient();
-                  }}
-                  className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
-                >
-                  <Plus className="w-3 h-3" /> Novi klijent
-                </button>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <User className="w-4 h-4" />
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Klijent <span className="text-rose-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenNewClient();
+                    }}
+                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
+                  >
+                    <Plus className="w-3 h-3" /> Novi klijent
+                  </button>
                 </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <select
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
+                    required
+                    className="input-field pl-10 pr-8 font-medium appearance-none cursor-pointer"
+                  >
+                    {/* SAMO IME KLIJENTA - bez zagrada i cijene */}
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Tip obračuna za stalnog klijenta */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Tip obračuna <span className="text-slate-400">(za ovaj unos)</span>
+                </label>
                 <select
-                  value={clientId}
-                  onChange={(e) => setClientId(e.target.value)}
-                  required
-                  className="input-field pl-10 pr-8 font-medium appearance-none cursor-pointer"
+                  value={permRateType}
+                  onChange={(e) => setPermRateType(e.target.value as 'hourly' | 'daily' | 'service')}
+                  className="input-field text-sm appearance-none cursor-pointer"
                 >
-                  {/* SAMO IME KLIJENTA - bez zagrada i cijene */}
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
+                  <option value="hourly">Po satu</option>
+                  <option value="daily">Dnevno / Fiksno</option>
+                  <option value="service">Po usluzi</option>
                 </select>
               </div>
             </div>
@@ -337,11 +367,12 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
                   </label>
                   <select
                     value={tempRateType}
-                    onChange={(e) => setTempRateType(e.target.value as 'hourly' | 'daily')}
+                    onChange={(e) => setTempRateType(e.target.value as 'hourly' | 'daily' | 'service')}
                     className="input-field text-sm appearance-none cursor-pointer"
                   >
                     <option value="hourly">Po satu</option>
                     <option value="daily">Dnevno / Fiksno</option>
+                    <option value="service">Po usluzi</option>
                   </select>
                 </div>
               </div>

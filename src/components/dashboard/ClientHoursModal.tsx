@@ -242,10 +242,8 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
                     <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
                       {formatCurrency(log.earned_amount)}
                     </span>
-                    <span className="text-[10px] text-slate-400 block">
-                      {client.rate_type === 'hourly'
-                        ? `${formatCurrency(client.rate_amount)}/h`
-                        : `${formatCurrency(client.rate_amount)}/dan`}
+                    <span className="text-[10px] text-slate-400 block capitalize">
+                      {log.type_works || (client.rate_type === 'hourly' ? 'po satu' : 'dnevno')}
                     </span>
                   </div>
                 </div>

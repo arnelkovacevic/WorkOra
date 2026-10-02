@@ -234,10 +234,11 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                   {monthlyLogs.map((log) => {
                     const clientName = log.clients?.name || 'Nepoznat';
-                    const rateDisplay =
-                      log.clients?.rate_type === 'hourly'
-                        ? `${formatCurrency(log.clients.rate_amount)}/h`
-                        : `${formatCurrency(log.clients?.rate_amount || 0)}/d`;
+                    const rateDisplay = log.type_works 
+                      ? log.type_works
+                      : log.clients?.rate_type === 'hourly'
+                        ? 'po satu'
+                        : 'dnevno';
 
                     return (
                       <tr key={log.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">

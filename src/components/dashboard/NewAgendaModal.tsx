@@ -44,6 +44,10 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
   const [timeFrom, setTimeFrom] = useState<string>('10:00');
   const [timeTo, setTimeTo] = useState<string>('13:00');
   const [taskDescription, setTaskDescription] = useState<string>('Čišćenje i peglanje');
+  const [agendaMode, setAgendaMode] = useState<'permanent' | 'temporary'>('permanent');
+  const [tempClientName, setTempClientName] = useState<string>('');
+  const [typeWorks, setTypeWorks] = useState<'po satu' | 'dnevno' | 'po usluzi'>('po satu');
+  const [tempRateAmount, setTempRateAmount] = useState<string>('15');
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -71,20 +75,35 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
 
   // Procijenjena zarada
   const estimatedEarned = useMemo(() => {
-    if (!selectedClient) return 0;
-    if (selectedClient.rate_type === 'daily') {
-      return Number(selectedClient.rate_amount);
+    if (agendaMode === 'permanent') {
+      if (!selectedClient) return 0;
+      const rate = Number(selectedClient.rate_amount);
+      if (typeWorks === 'dnevno' || typeWorks === 'po usluzi') {
+        return rate;
+      }
+      const hours = totalMinutes / 60;
+      return Math.round((hours * rate) * 100) / 100;
+    } else {
+      const rate = Number(tempRateAmount) || 0;
+      if (typeWorks === 'dnevno' || typeWorks === 'po usluzi') {
+        return rate;
+      }
+      const hours = totalMinutes / 60;
+      return Math.round((hours * rate) * 100) / 100;
     }
-    const hours = totalMinutes / 60;
-    return Math.round((hours * Number(selectedClient.rate_amount)) * 100) / 100;
-  }, [selectedClient, totalMinutes]);
+  }, [agendaMode, selectedClient, totalMinutes, typeWorks, tempRateAmount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
 
-    if (!clientId) {
+    if (agendaMode === 'permanent' && !clientId) {
       setErrorMessage('Molimo odaberite klijenta sa liste.');
+      return;
+    }
+
+    if (agendaMode === 'temporary' && !tempClientName.trim()) {
+      setErrorMessage('Molimo unesite naziv klijenta.');
       return;
     }
 
@@ -109,12 +128,18 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
     }
 
     setLoading(true);
+    
+    // Kodiranje podataka o privremenom klijentu i tipu posla u opis
+    const finalDescription = agendaMode === 'temporary'
+      ? `[Povremeni: ${tempClientName.trim()}] [Tip: ${typeWorks}] [Cijena: ${tempRateAmount}] ${taskDescription.trim()}`
+      : `[Tip: ${typeWorks}] ${taskDescription.trim()}`;
+
     const result = await addAgendaEvent({
-      client_id: clientId,
+      client_id: agendaMode === 'permanent' ? clientId : (clients[0]?.id || ''),
       scheduled_date: scheduledDate,
       time_from: timeFrom,
       time_to: timeTo,
-      task_description: taskDescription.trim(),
+      task_description: finalDescription,
     });
     setLoading(false);
 
@@ -168,41 +193,139 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
             </div>
           )}
 
-          {/* Odabir klijenta */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Klijent <span className="text-rose-500">*</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onOpenNewClient();
-                }}
-                className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
-              >
-                <Plus className="w-3 h-3" /> Novi klijent
-              </button>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <User className="w-4 h-4" />
-              </div>
-              <select
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                required
-                className="input-field pl-10 pr-8 font-medium appearance-none cursor-pointer"
-              >
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({formatCurrency(c.rate_amount)} / {c.rate_type === 'hourly' ? 'sat' : 'dan'})
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Tip klijenta (Stalni vs Povremeni) */}
+          <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-center text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setAgendaMode('permanent')}
+              className={`py-1.5 rounded-lg transition-all ${
+                agendaMode === 'permanent'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              Stalni klijent
+            </button>
+            <button
+              type="button"
+              onClick={() => setAgendaMode('temporary')}
+              className={`py-1.5 rounded-lg transition-all ${
+                agendaMode === 'temporary'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              Povremeni klijent
+            </button>
           </div>
+
+          {/* Polja na osnovu odabira */}
+          {agendaMode === 'permanent' ? (
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Klijent <span className="text-rose-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenNewClient();
+                    }}
+                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
+                  >
+                    <Plus className="w-3 h-3" /> Novi klijent
+                  </button>
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <select
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
+                    required
+                    className="input-field pl-10 pr-8 font-medium appearance-none cursor-pointer"
+                  >
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({formatCurrency(c.rate_amount)} / {c.rate_type === 'hourly' ? 'sat' : 'dan'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Tip obračuna za stalnog klijenta */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Tip obračuna <span className="text-slate-400">(za ovaj termin)</span>
+                </label>
+                <select
+                  value={typeWorks}
+                  onChange={(e) => setTypeWorks(e.target.value as 'po satu' | 'dnevno' | 'po usluzi')}
+                  className="input-field text-sm appearance-none cursor-pointer"
+                >
+                  <option value="po satu">Po satu</option>
+                  <option value="dnevno">Dnevno / Fiksno</option>
+                  <option value="po usluzi">Po usluzi</option>
+                </select>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Naziv klijenta / posla <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={tempClientName}
+                    onChange={(e) => setTempClientName(e.target.value)}
+                    placeholder="Npr. Popravka ograde - Marko"
+                    required
+                    className="input-field pl-10 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Tarifa i Tip obračuna za povremenog klijenta */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Iznos tarife (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={tempRateAmount}
+                    onChange={(e) => setTempRateAmount(e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="15"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Tip obračuna
+                  </label>
+                  <select
+                    value={typeWorks}
+                    onChange={(e) => setTypeWorks(e.target.value as 'po satu' | 'dnevno' | 'po usluzi')}
+                    className="input-field text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="po satu">Po satu</option>
+                    <option value="dnevno">Dnevno / Fiksno</option>
+                    <option value="po usluzi">Po usluzi</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Datum termina */}
           <div>
