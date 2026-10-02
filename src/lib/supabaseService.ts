@@ -888,7 +888,7 @@ export async function updateUserPassword(newPassword: string): Promise<{ success
       return { success: true };
     }
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Greška pri promjeni lozinke';
+    const msg = err instanceof Error ? err.message : 'Greška pri promjeni lozinke!';
     return { success: false, error: msg };
   }
 }
