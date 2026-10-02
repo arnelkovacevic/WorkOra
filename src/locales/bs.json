@@ -99,6 +99,8 @@
     "darkThemeDesc": "Noć / Štednja baterije",
     "language": "Jezik aplikacije",
     "languageDesc": "Odaberite jezik korisničkog interfejsa i PDF izvještaja",
+    "appInstallation": "Instalacija Aplikacije",
+    "appInstallationDesc": "Instalirajte OraWork na vaš mobilni uređaj za brži pristup",
     "security": "Sigurnost i Promjena Lozinke",
     "securityDesc": "Ažurirajte vašu pristupnu lozinku za prijavu na OraWork račun",
     "newPassword": "Nova lozinka",

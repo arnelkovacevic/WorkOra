@@ -73,9 +73,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenLogin, onOpenRegister }) =
           {/* Prekidač za jezik (BS / IT) */}
           <LanguageToggle />
 
-          {/* PWA Install Trigger */}
-          <PWAInstallButton />
-
           {/* Theme Toggle */}
           <ThemeToggle />
 

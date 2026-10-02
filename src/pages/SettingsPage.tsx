@@ -23,6 +23,7 @@ import { useTheme } from '../hooks/useTheme';
 import { updateUserPassword } from '../lib/supabaseService';
 import { DeleteAccountModal } from '../components/settings/DeleteAccountModal';
 import { LanguageToggle } from '../components/layout/LanguageToggle';
+import { PWAInstallButton } from '../components/layout/PWAInstallButton';
 
 export const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -202,6 +203,22 @@ export const SettingsPage: React.FC = () => {
             </div>
             {isDark && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
           </button>
+        </div>
+      </div>
+
+      {/* D. APLIKACIJA I INSTALACIJA */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Smartphone className="w-4 h-4 text-indigo-500" />
+              <span>{t('settings.appInstallation')}</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {t('settings.appInstallationDesc')}
+            </p>
+          </div>
+          <PWAInstallButton />
         </div>
       </div>
 
