@@ -1,0 +1,107 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  :root {
+    --color-primary: #4f46e5;
+    --color-primary-hover: #4338ca;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    overflow-x: hidden;
+    touch-action: manipulation;
+  }
+}
+
+/* Reusable UI Utility Classes requested */
+@layer components {
+  .input-field {
+    width: 100%;
+    padding: 0.65rem 0.95rem;
+    font-size: 0.95rem;
+    border-radius: 0.75rem;
+    border-width: 1px;
+    border-color: #cbd5e1;
+    background-color: #ffffff;
+    color: #0f172a;
+    transition: all 0.2s ease-in-out;
+    outline: none;
+  }
+
+  .dark .input-field {
+    border-color: #334155;
+    background-color: #1e293b;
+    color: #f8fafc;
+  }
+
+  .input-field:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  }
+
+  .dark .input-field:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    border-radius: 0.75rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.35);
+    transition: all 0.2s ease-in-out;
+    text-align: center;
+    user-select: none;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+    box-shadow: 0 6px 20px 0 rgba(79, 70, 229, 0.45);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px 0 rgba(79, 70, 229, 0.3);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* Custom Scrollbar for smooth modern aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}

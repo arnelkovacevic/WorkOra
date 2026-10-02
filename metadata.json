@@ -1,0 +1,6 @@
+{
+  "name": "WorkOra — Prati sate i zaradu",
+  "description": "WorkOra je moderna mobilno prilagođena PWA aplikacija za praćenje radnih sati, vođenje klijenata, kalendar agendu i izračun zarade sa PDF exportom.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

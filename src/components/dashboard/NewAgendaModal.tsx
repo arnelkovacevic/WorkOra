@@ -1,0 +1,328 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Calendar, 
+  Clock, 
+  User, 
+  FileText, 
+  AlertCircle, 
+  Loader2, 
+  Plus, 
+  Sparkles,
+  CalendarCheck
+} from 'lucide-react';
+import { ModalWrapper } from '../ui/ModalWrapper';
+import { 
+  Client, 
+  AgendaEvent, 
+  addAgendaEvent, 
+  calculateMinutes, 
+  formatMinutesToHours, 
+  formatCurrency 
+} from '../../lib/supabaseService';
+
+interface NewAgendaModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: (event: AgendaEvent) => void;
+  clients: Client[];
+  initialDate?: string;
+  onOpenNewClient: () => void;
+}
+
+export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  clients,
+  initialDate,
+  onOpenNewClient,
+}) => {
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  const [clientId, setClientId] = useState<string>('');
+  const [scheduledDate, setScheduledDate] = useState<string>(initialDate || todayStr);
+  const [timeFrom, setTimeFrom] = useState<string>('10:00');
+  const [timeTo, setTimeTo] = useState<string>('13:00');
+  const [taskDescription, setTaskDescription] = useState<string>('Čišćenje i peglanje');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+
+  useEffect(() => {
+    if (clients && clients.length > 0 && !clientId) {
+      setClientId(clients[0].id);
+    }
+  }, [clients, clientId]);
+
+  useEffect(() => {
+    if (initialDate) {
+      setScheduledDate(initialDate);
+    }
+  }, [initialDate, isOpen]);
+
+  // Odabrani klijent
+  const selectedClient = useMemo(() => {
+    return clients.find((c) => c.id === clientId) || null;
+  }, [clients, clientId]);
+
+  // Trajanje
+  const totalMinutes = useMemo(() => {
+    return calculateMinutes(timeFrom, timeTo);
+  }, [timeFrom, timeTo]);
+
+  // Procijenjena zarada
+  const estimatedEarned = useMemo(() => {
+    if (!selectedClient) return 0;
+    if (selectedClient.rate_type === 'daily') {
+      return Number(selectedClient.rate_amount);
+    }
+    const hours = totalMinutes / 60;
+    return Math.round((hours * Number(selectedClient.rate_amount)) * 100) / 100;
+  }, [selectedClient, totalMinutes]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage('');
+
+    if (!clientId) {
+      setErrorMessage('Molimo odaberite klijenta sa liste.');
+      return;
+    }
+
+    if (!scheduledDate) {
+      setErrorMessage('Molimo odaberite datum zakazanog termina.');
+      return;
+    }
+
+    if (!timeFrom || !timeTo) {
+      setErrorMessage('Molimo odaberite vrijeme početka i završetka.');
+      return;
+    }
+
+    if (totalMinutes <= 0) {
+      setErrorMessage('Vrijeme završetka mora biti poslije početka termina.');
+      return;
+    }
+
+    if (!taskDescription.trim()) {
+      setErrorMessage('Molimo unesite opis zadatka / posla.');
+      return;
+    }
+
+    setLoading(true);
+    const result = await addAgendaEvent({
+      client_id: clientId,
+      scheduled_date: scheduledDate,
+      time_from: timeFrom,
+      time_to: timeTo,
+      task_description: taskDescription.trim(),
+    });
+    setLoading(false);
+
+    if (result.error || !result.data) {
+      setErrorMessage(result.error || 'Greška pri zakazivanju termina.');
+    } else {
+      onSuccess(result.data);
+      onClose();
+    }
+  };
+
+  return (
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Zakaži novi termin"
+      subtitle="Planirajte poslove i termine kod klijenata u kalendaru"
+      icon={<CalendarCheck className="w-5 h-5 text-indigo-500" />}
+    >
+      {(!clients || clients.length === 0) ? (
+        <div className="text-center py-6 space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
+            <User className="w-7 h-7" />
+          </div>
+          <div>
+            <h4 className="text-base font-bold text-slate-900 dark:text-white">
+              Nemate definisanih klijenata
+            </h4>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+              Da biste zakazali termin, potrebno je prvo unijeti klijenta sa tarifom.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenNewClient();
+            }}
+            className="btn-primary text-xs py-2.5 px-4 font-semibold"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Dodaj prvog klijenta</span>
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {errorMessage && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-700 dark:text-rose-300">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Odabir klijenta */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Klijent <span className="text-rose-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenNewClient();
+                }}
+                className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
+              >
+                <Plus className="w-3 h-3" /> Novi klijent
+              </button>
+            </div>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <User className="w-4 h-4" />
+              </div>
+              <select
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                required
+                className="input-field pl-10 pr-8 font-medium appearance-none cursor-pointer"
+              >
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({formatCurrency(c.rate_amount)} / {c.rate_type === 'hourly' ? 'sat' : 'dan'})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Datum termina */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Datum posla <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <Calendar className="w-4 h-4" />
+              </div>
+              <input
+                type="date"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                required
+                className="input-field pl-10 font-medium"
+              />
+            </div>
+          </div>
+
+          {/* Vrijeme Od i Vrijeme Do */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Vrijeme Od <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <Clock className="w-3.5 h-3.5" />
+                </div>
+                <input
+                  type="time"
+                  value={timeFrom}
+                  onChange={(e) => setTimeFrom(e.target.value)}
+                  required
+                  className="input-field pl-8 text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Vrijeme Do <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <Clock className="w-3.5 h-3.5" />
+                </div>
+                <input
+                  type="time"
+                  value={timeTo}
+                  onChange={(e) => setTimeTo(e.target.value)}
+                  required
+                  className="input-field pl-8 text-sm"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Opis zadatka */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Opis posla / zadatka <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute top-3 left-3 text-slate-400 pointer-events-none">
+                <FileText className="w-4 h-4" />
+              </div>
+              <textarea
+                value={taskDescription}
+                onChange={(e) => setTaskDescription(e.target.value)}
+                placeholder="Npr. Peglanje i generalno čišćenje dnevne sobe..."
+                required
+                rows={2}
+                className="input-field pl-10 text-xs sm:text-sm py-2.5 resize-none"
+              />
+            </div>
+          </div>
+
+          {/* Procijenjeno trajanje i zarada */}
+          <div className="p-3 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-900/60 flex items-center justify-between text-xs">
+            <div>
+              <span className="text-indigo-900/70 dark:text-indigo-300 block font-medium">
+                Planirano trajanje:
+              </span>
+              <span className="font-bold text-slate-900 dark:text-white">
+                {formatMinutesToHours(totalMinutes)}
+              </span>
+            </div>
+
+            <div className="text-right">
+              <span className="text-indigo-900/70 dark:text-indigo-300 block font-medium">
+                Očekivana zarada:
+              </span>
+              <span className="font-extrabold text-base text-indigo-600 dark:text-indigo-400">
+                {formatCurrency(estimatedEarned)}
+              </span>
+            </div>
+          </div>
+
+          {/* Dugme za spremanje */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full btn-primary mt-2 py-3 text-sm font-semibold"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Zakazivanje...</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                <span>Zakaži termin u kalendaru</span>
+              </>
+            )}
+          </button>
+        </form>
+      )}
+    </ModalWrapper>
+  );
+};
