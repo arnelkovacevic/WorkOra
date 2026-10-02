@@ -4,13 +4,12 @@ import {
   Clock, 
   User, 
   FileText, 
-  DollarSign, 
   AlertCircle, 
   Loader2, 
   Plus, 
-  ArrowRight,
-  Sparkles,
-  Info
+  Briefcase,
+  Users,
+  ChevronLeft
 } from 'lucide-react';
 import { ModalWrapper } from '../ui/ModalWrapper';
 import { 
@@ -30,6 +29,8 @@ interface NewWorkLogModalProps {
   onOpenNewClient: () => void;
 }
 
+type ClientType = 'select' | 'permanent' | 'temporary';
+
 export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
   isOpen,
   onClose,
@@ -37,10 +38,17 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
   clients,
   onOpenNewClient,
 }) => {
-  // Danasnji datum u formatu YYYY-MM-DD
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
+  // Stanje koraka: 'select' (izbor) | 'permanent' (stalni) | 'temporary' (povremeni)
+  const [modalMode, setModalMode] = useState<ClientType>('select');
+
+  // Zajednička i specifična stanja
   const [clientId, setClientId] = useState<string>('');
+  const [tempClientName, setTempClientName] = useState<string>('');
+  const [tempRateType, setTempRateType] = useState<'hourly' | 'daily'>('hourly');
+  const [tempRateAmount, setTempRateAmount] = useState<string>('15');
+
   const [workDate, setWorkDate] = useState<string>(todayStr);
   const [timeFrom, setTimeFrom] = useState<string>('09:00');
   const [timeTo, setTimeTo] = useState<string>('12:30');
@@ -48,25 +56,30 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // Postavi prvog klijenta kao defaultnog čim se lista učita
+  // Defaultni stalni klijent
   useEffect(() => {
     if (clients && clients.length > 0 && !clientId) {
       setClientId(clients[0].id);
     }
   }, [clients, clientId]);
 
-  // Reset forme pri ponovnom otvaranju
+  // Reset forme pri otvaranju i zatvaranju
   useEffect(() => {
     if (isOpen) {
+      setModalMode('select');
       setWorkDate(todayStr);
       setErrorMessage('');
+      setNote('');
+      setTempClientName('');
+      setTempRateAmount('15');
+      setTempRateType('hourly');
       if (clients && clients.length > 0 && !clientId) {
         setClientId(clients[0].id);
       }
     }
   }, [isOpen, todayStr, clients]);
 
-  // Trenutno odabrani klijent
+  // Trenutno odabrani stalni klijent
   const selectedClient = useMemo(() => {
     return clients.find((c) => c.id === clientId) || null;
   }, [clients, clientId]);
@@ -78,22 +91,35 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
 
   // Real-time izračun zarade
   const earnedAmount = useMemo(() => {
-    if (!selectedClient) return 0;
-    if (selectedClient.rate_type === 'daily') {
-      return Number(selectedClient.rate_amount);
+    if (modalMode === 'permanent') {
+      if (!selectedClient) return 0;
+      if (selectedClient.rate_type === 'daily') {
+        return Number(selectedClient.rate_amount);
+      }
+      const hours = totalMinutes / 60;
+      return Math.round(hours * Number(selectedClient.rate_amount) * 100) / 100;
+    } else if (modalMode === 'temporary') {
+      const rate = Number(tempRateAmount) || 0;
+      if (tempRateType === 'daily') {
+        return rate;
+      }
+      const hours = totalMinutes / 60;
+      return Math.round(hours * rate * 100) / 100;
     }
-    // Hourly: (total_minutes / 60) * rate_amount
-    const hours = totalMinutes / 60;
-    const amount = hours * Number(selectedClient.rate_amount);
-    return Math.round(amount * 100) / 100;
-  }, [selectedClient, totalMinutes]);
+    return 0;
+  }, [modalMode, selectedClient, totalMinutes, tempRateAmount, tempRateType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
 
-    if (!clientId) {
+    if (modalMode === 'permanent' && !clientId) {
       setErrorMessage('Molimo odaberite klijenta sa liste.');
+      return;
+    }
+
+    if (modalMode === 'temporary' && !tempClientName.trim()) {
+      setErrorMessage('Molimo unesite naziv klijenta ili posla.');
       return;
     }
 
@@ -113,15 +139,22 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
     }
 
     setLoading(true);
+
+    // Za povremenog klijenta možemo spakovati naziv u bilješku ako nemamo poseban client_id
+    const finalNote = modalMode === 'temporary'
+      ? `[Povremeni klijent: ${tempClientName.trim()}] ${note.trim()}`.trim()
+      : note.trim() || null;
+
     const result = await addWorkLog({
-      client_id: clientId,
+      client_id: modalMode === 'permanent' ? clientId : (clients[0]?.id || ''),
       work_date: workDate,
       time_from: timeFrom,
       time_to: timeTo,
       total_minutes: totalMinutes,
       earned_amount: earnedAmount,
-      note: note.trim() || null,
+      note: finalNote,
     });
+
     setLoading(false);
 
     if (result.error || !result.data) {
@@ -137,38 +170,84 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Novi radni unos"
-      subtitle="Zabilježite odrađene sate i automatski izračunajte zaradu"
+      title={
+        modalMode === 'select'
+          ? "Novi radni unos"
+          : modalMode === 'permanent'
+          ? "Unos za stalnog klijenta"
+          : "Unos za povremenog klijenta"
+      }
+      subtitle={
+        modalMode === 'select'
+          ? "Odaberite tip klijenta za koji bilježite sate"
+          : "Evidentirajte sate i obračunajte zaradu"
+      }
       icon={<Clock className="w-5 h-5" />}
     >
-      {/* Ako korisnik još nema klijenata */}
-      {(!clients || clients.length === 0) ? (
-        <div className="text-center py-6 space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
-            <User className="w-7 h-7" />
+      {/* ----------------- KORAK 1: SELEKTOR ----------------- */}
+      {modalMode === 'select' && (
+        <div className="space-y-4 py-2">
+          <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+            Odaberite kako želite evidentirati ovaj radni posao:
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Opcija 1: Stalni klijent */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!clients || clients.length === 0) {
+                  onClose();
+                  onOpenNewClient();
+                } else {
+                  setModalMode('permanent');
+                }
+              }}
+              className="flex flex-col items-start p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 bg-white dark:bg-slate-900 text-left transition-all group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Users className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                Stalni klijent
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                Klijenti koje već imate sačuvanje u bazi i sa definisanom tarifom.
+              </p>
+            </button>
+
+            {/* Opcija 2: Povremeni klijent */}
+            <button
+              type="button"
+              onClick={() => setModalMode('temporary')}
+              className="flex flex-col items-start p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-500 bg-white dark:bg-slate-900 text-left transition-all group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Briefcase className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                Povremeni klijent
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                Brzi ili jednokratni unos bez kreiranja stalnog profila u bazi.
+              </p>
+            </button>
           </div>
-          <div>
-            <h4 className="text-base font-bold text-slate-900 dark:text-white">
-              Još nemate unesenih klijenata
-            </h4>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-              Prije evidentiranja radnih sati, potrebno je definisati barem jednog klijenta sa tarifom.
-            </p>
-          </div>
+        </div>
+      )}
+
+      {/* ----------------- KORAK 2: FORMA (STALNI / POVREMENI) ----------------- */}
+      {modalMode !== 'select' && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Dugme za povratak na izbor */}
           <button
             type="button"
-            onClick={() => {
-              onClose();
-              onOpenNewClient();
-            }}
-            className="btn-primary text-xs py-2.5 px-4 font-semibold"
+            onClick={() => setModalMode('select')}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 mb-1"
           >
-            <Plus className="w-4 h-4" />
-            <span>Dodaj prvog klijenta</span>
+            <ChevronLeft className="w-4 h-4" /> Promijeni tip klijenta
           </button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
+
           {errorMessage && (
             <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-700 dark:text-rose-300">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -176,43 +255,100 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
             </div>
           )}
 
-          {/* Odabir klijenta */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Klijent <span className="text-rose-500">*</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onOpenNewClient();
-                }}
-                className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
-              >
-                <Plus className="w-3 h-3" /> Novi klijent
-              </button>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <User className="w-4 h-4" />
+          {/* ----- STALNI KLIJENT SPECIFIČNO ----- */}
+          {modalMode === 'permanent' && (
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Klijent <span className="text-rose-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenNewClient();
+                  }}
+                  className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
+                >
+                  <Plus className="w-3 h-3" /> Novi klijent
+                </button>
               </div>
-              <select
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                required
-                className="input-field pl-10 pr-8 font-medium appearance-none cursor-pointer"
-              >
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({formatCurrency(c.rate_amount)} / {c.rate_type === 'hourly' ? 'sat' : 'dan'})
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <User className="w-4 h-4" />
+                </div>
+                <select
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  required
+                  className="input-field pl-10 pr-8 font-medium appearance-none cursor-pointer"
+                >
+                  {/* SAMO IME KLIJENTA - bez zagrada i cijene */}
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Datum posla */}
+          {/* ----- POVREMENI KLIJENT SPECIFIČNO ----- */}
+          {modalMode === 'temporary' && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Naziv klijenta / posla <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={tempClientName}
+                    onChange={(e) => setTempClientName(e.target.value)}
+                    placeholder="Npr. Popravka ograde - Marko"
+                    required
+                    className="input-field pl-10 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Tarifa i Tip obračuna za povremenog */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Iznos tarife (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={tempRateAmount}
+                    onChange={(e) => setTempRateAmount(e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="15"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Tip obračuna
+                  </label>
+                  <select
+                    value={tempRateType}
+                    onChange={(e) => setTempRateType(e.target.value as 'hourly' | 'daily')}
+                    className="input-field text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="hourly">Po satu</option>
+                    <option value="daily">Dnevno / Fiksno</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ----- ZAJEDNIČKA POLJA (Datum, Vrijeme OD/DO) ----- */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Datum rada <span className="text-rose-500">*</span>
@@ -231,7 +367,6 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
             </div>
           </div>
 
-          {/* Vrijeme Od i Vrijeme Do (Grid 2 kolone) */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -283,7 +418,11 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
 
             <div className="flex items-center justify-between text-xs pt-1.5 border-t border-indigo-100 dark:border-indigo-900/50">
               <span className="text-indigo-900/70 dark:text-indigo-300 font-medium">
-                Izračunata zarada ({selectedClient?.rate_type === 'hourly' ? 'po satu' : 'dnevna tarifa'}):
+                Izračunata zarada ({
+                  modalMode === 'permanent'
+                    ? (selectedClient?.rate_type === 'hourly' ? 'po satu' : 'dnevna tarifa')
+                    : (tempRateType === 'hourly' ? 'po satu' : 'dnevna tarifa')
+                }):
               </span>
               <span className="text-base font-extrabold text-indigo-600 dark:text-indigo-400">
                 {formatCurrency(earnedAmount)}
@@ -303,7 +442,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Npr. Završen modul za fakturisanje i popravljeni bagovi..."
+                placeholder="Opis posla ili dodatne napomene..."
                 rows={2}
                 className="input-field pl-10 text-xs sm:text-sm py-2.5 resize-none"
               />
