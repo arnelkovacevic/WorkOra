@@ -35,7 +35,8 @@ import {
   formatCurrency, 
   formatMinutesToHours, 
   formatWorkDate,
-  calculateMinutes 
+  calculateMinutes,
+  BOSNIAN_MONTHS
 } from '../lib/supabaseService';
 import { WorkLogCard } from '../components/dashboard/WorkLogCard';
 import { ClientCard } from '../components/dashboard/ClientCard';
@@ -88,6 +89,29 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
   // Pretraga i filteri
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedClientFilter, setSelectedClientFilter] = useState<string>('all');
+  const [selectedYearFilter, setSelectedYearFilter] = useState<number>(new Date().getFullYear());
+  const [selectedMonthFilter, setSelectedMonthFilter] = useState<string>('all');
+  const [dashboardYearFilter, setDashboardYearFilter] = useState<number>(new Date().getFullYear());
+
+  const availableYears = useMemo(() => {
+    const current = new Date().getFullYear();
+    return [current - 2, current - 1, current, current + 1];
+  }, []);
+
+  // Godine za statistiku na panelu (sve godine unazad iz baze, trenutna i +1 godina)
+  const dashboardAvailableYears = useMemo(() => {
+    const yearsSet = new Set<number>();
+    const current = new Date().getFullYear();
+    yearsSet.add(current);
+    yearsSet.add(current + 1);
+    workLogs.forEach((log) => {
+      if (log.work_date) {
+        const yr = new Date(log.work_date).getFullYear();
+        if (yr) yearsSet.add(yr);
+      }
+    });
+    return Array.from(yearsSet).sort((a, b) => b - a); // od najveće do najmanje
+  }, [workLogs]);
 
   // Prikaz notifikacije (Toast)
   const showToast = (msg: string) => {
@@ -119,19 +143,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
   }, []);
 
   // -----------------------------------------------------------------
-  // IZRAČUN STATISTIKE (Brzi pregled na vrhu)
+  // IZRAČUN STATISTIKE (Brzi pregled na vrhu) - FILTRIRANO PO GODINI
   // -----------------------------------------------------------------
   const stats = useMemo(() => {
-    const totalEarned = workLogs.reduce((acc, log) => acc + (Number(log.earned_amount) || 0), 0);
-    const totalMinutes = workLogs.reduce((acc, log) => acc + (Number(log.total_minutes) || 0), 0);
+    const yearLogs = workLogs.filter((log) => {
+      if (!log.work_date) return false;
+      return new Date(log.work_date).getFullYear() === dashboardYearFilter;
+    });
+
+    const totalEarned = yearLogs.reduce((acc, log) => acc + (Number(log.earned_amount) || 0), 0);
+    const totalMinutes = yearLogs.reduce((acc, log) => acc + (Number(log.total_minutes) || 0), 0);
     const totalClientsCount = clients.length;
 
     return {
       totalEarned,
       totalMinutes,
       totalClientsCount,
+      logsCount: yearLogs.length,
     };
-  }, [workLogs, clients]);
+  }, [workLogs, clients, dashboardYearFilter]);
 
   // Statistika po klijentu
   const clientStatsMap = useMemo(() => {
@@ -148,9 +178,48 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
     return map;
   }, [workLogs]);
 
-  // Filtrirani radni unosi
+  // Lista jedinstvenih klijenata (stalni i povremeni) za filter
+  const allUniqueClientOptions = useMemo(() => {
+    const options = new Map<string, { id: string; name: string }>();
+    // Dodaj stalne klijente
+    clients.forEach((c) => {
+      options.set(c.id, { id: c.id, name: c.name });
+    });
+    // Dodaj povremene klijente koji imaju temp_client_name a nemaju client_id
+    workLogs.forEach((log) => {
+      if (!log.client_id && log.temp_client_name && log.temp_client_name.trim()) {
+        const name = log.temp_client_name.trim();
+        options.set(name, { id: name, name: name });
+      }
+    });
+    return Array.from(options.values()).sort((a, b) => a.name.localeCompare(b.name, 'bs'));
+  }, [clients, workLogs]);
+
+  // Filtrirani radni unosi po pretrazi, klijentu, godini i mjesecu
   const filteredWorkLogs = useMemo(() => {
     return workLogs.filter((log) => {
+      // 1. Filtriranje po klijentu
+      let matchesClient = true;
+      if (selectedClientFilter !== 'all') {
+        matchesClient = log.client_id === selectedClientFilter || 
+                        log.temp_client_name === selectedClientFilter;
+      }
+
+      // 2. Filtriranje po godini
+      let matchesYear = true;
+      if (log.work_date) {
+        const logYear = new Date(log.work_date).getFullYear();
+        matchesYear = logYear === selectedYearFilter;
+      }
+
+      // 3. Filtriranje po mjesecu
+      let matchesMonth = true;
+      if (selectedMonthFilter !== 'all' && log.work_date) {
+        const logMonth = new Date(log.work_date).getMonth() + 1;
+        matchesMonth = logMonth === Number(selectedMonthFilter);
+      }
+
+      // 4. Pretraga po tekstu
       const clientName = log.clients?.name?.toLowerCase() || '';
       const tempClientName = log.temp_client_name?.toLowerCase() || '';
       const typeWorks = log.type_works?.toLowerCase() || '';
@@ -162,12 +231,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
         noteText.includes(searchQuery.toLowerCase()) ||
         log.work_date.includes(searchQuery);
 
-      const matchesClient =
-        selectedClientFilter === 'all' || log.client_id === selectedClientFilter;
-
-      return matchesSearch && matchesClient;
+      return matchesYear && matchesMonth && matchesClient && matchesSearch;
     });
-  }, [workLogs, searchQuery, selectedClientFilter]);
+  }, [workLogs, searchQuery, selectedClientFilter, selectedYearFilter, selectedMonthFilter]);
 
   // Filtrirani klijenti
   const filteredClients = useMemo(() => {
@@ -428,7 +494,29 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
       {/* 1. TAB: PANEL (Samo na ovom tabu stoje 3 statističke kartice, brze akcije i sažetak) */}
       {/* ========================================================================= */}
       {activeTab === 'overview' && (
-        <div className="space-y-5 animate-in fade-in duration-200">
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* Brzi filter za statistiku na vrhu */}
+          <div className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-200/90 dark:border-slate-800">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <Calendar className="w-4 h-4 text-indigo-500" />
+              <span className="font-bold select-none">Statistika za godinu:</span>
+            </div>
+
+            <div className="relative">
+              <select
+                value={dashboardYearFilter}
+                onChange={(e) => setDashboardYearFilter(Number(e.target.value))}
+                className="input-field text-xs py-1.5 pr-8 pl-3 font-bold cursor-pointer rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xs"
+              >
+                {dashboardAvailableYears.map((yr) => (
+                  <option key={yr} value={yr}>
+                    {yr}. godina
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* STATISTIČKE KARTICE - Prikazuju se ISKLJUČIVO na početnoj (Home / Panel) strani */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* 1. Ukupno Zarađeno */}
@@ -444,7 +532,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
                   {formatCurrency(stats.totalEarned)}
                 </div>
                 <span className="text-[10px] text-slate-400 block">
-                  {t('stats.basedOnLogs', { count: workLogs.length })}
+                  {t('stats.basedOnLogs', { count: stats.logsCount })}
                 </span>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
@@ -772,20 +860,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
             </div>
 
             <div className="flex items-center gap-2">
-              {clients.length > 0 && (
-                <select
-                  value={selectedClientFilter}
-                  onChange={(e) => setSelectedClientFilter(e.target.value)}
-                  className="input-field text-xs py-2 pr-8 font-medium cursor-pointer"
-                >
-                  <option value="all">Svi klijenti ({clients.length})</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+              <select
+                value={selectedClientFilter}
+                onChange={(e) => setSelectedClientFilter(e.target.value)}
+                className="input-field text-xs py-2 pr-8 font-medium cursor-pointer"
+              >
+                <option value="all">Svi klijenti ({allUniqueClientOptions.length})</option>
+                {allUniqueClientOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
 
               <button
                 onClick={() => setIsWorkLogModalOpen(true)}
@@ -795,6 +881,66 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
                 <Plus className="w-4 h-4" />
                 <span>Novi Unos</span>
               </button>
+            </div>
+          </div>
+
+          {/* Brzi filteri za Mjesec i Godinu */}
+          <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 space-y-3">
+            {/* Filter po Godinama */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider select-none pl-1">
+                Filter po godinama:
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {availableYears.map((yr) => (
+                  <button
+                    key={yr}
+                    type="button"
+                    onClick={() => setSelectedYearFilter(yr)}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all ${
+                      selectedYearFilter === yr
+                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {yr}.
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Filter po Mjesecima */}
+            <div className="flex items-start gap-2.5 flex-col md:flex-row md:items-center">
+              <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider select-none pl-1 whitespace-nowrap md:pt-0">
+                Filter po mjesecima:
+              </span>
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0 w-full no-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMonthFilter('all')}
+                  className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all flex-shrink-0 ${
+                    selectedMonthFilter === 'all'
+                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  Svi mjeseci
+                </button>
+                {BOSNIAN_MONTHS.map((m) => (
+                  <button
+                    key={m.value}
+                    type="button"
+                    onClick={() => setSelectedMonthFilter(String(m.value))}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold border transition-all flex-shrink-0 ${
+                      selectedMonthFilter === String(m.value)
+                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {m.name}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

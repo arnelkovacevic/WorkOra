@@ -8,13 +8,18 @@ import {
   Loader2, 
   Plus, 
   Sparkles,
-  CalendarCheck
+  CalendarCheck,
+  DollarSign,
+  History,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { ModalWrapper } from '../ui/ModalWrapper';
 import { 
   Client, 
   AgendaEvent, 
   addAgendaEvent, 
+  getAgendaEvents,
   calculateMinutes, 
   formatMinutesToHours, 
   formatCurrency 
@@ -51,6 +56,10 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
+  // Država za bilješke/šablone
+  const [existingDescriptions, setExistingDescriptions] = useState<string[]>([]);
+  const [showDescDropdown, setShowDescDropdown] = useState<boolean>(false);
+
   useEffect(() => {
     if (clients && clients.length > 0 && !clientId) {
       setClientId(clients[0].id);
@@ -62,6 +71,36 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
       setScheduledDate(initialDate);
     }
   }, [initialDate, isOpen]);
+
+  // Učitavanje unetih / historijskih opisa poslova
+  useEffect(() => {
+    if (isOpen) {
+      const fetchDescriptions = async () => {
+        const descSet = new Set<string>();
+        // Podrazumevani šabloni za lakši odabir
+        descSet.add('Čišćenje i peglanje');
+        descSet.add('Generalno čišćenje kuhinje');
+        descSet.add('Peglanje odjeće');
+        descSet.add('Čišćenje poslovnog prostora');
+        descSet.add('Pranje prozora i balkona');
+
+        try {
+          const res = await getAgendaEvents();
+          if (res.data) {
+            res.data.forEach((evt) => {
+              if (evt.task_description && evt.task_description.trim()) {
+                descSet.add(evt.task_description.trim());
+              }
+            });
+          }
+        } catch (e) {
+          console.error('Greška pri dohvatanju šablona:', e);
+        }
+        setExistingDescriptions(Array.from(descSet));
+      };
+      fetchDescriptions();
+    }
+  }, [isOpen]);
 
   // Odabrani klijent
   const selectedClient = useMemo(() => {
@@ -190,11 +229,11 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
           </button>
         </div>
 
-        {/* Polja na osnovu odabira */}
+        {/* Polja na osnovu odabira klijenta */}
         {agendaMode === 'permanent' ? (
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {(!clients || clients.length === 0) ? (
-              <div className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 text-center space-y-2">
+              <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 text-center space-y-2">
                 <p className="text-xs text-indigo-950 dark:text-indigo-200 font-medium">
                   Nemate sačuvanih stalnih klijenata.
                 </p>
@@ -211,9 +250,9 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
                 </button>
               </div>
             ) : (
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     Klijent <span className="text-rose-500">*</span>
                   </label>
                   <button
@@ -222,7 +261,7 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
                       onClose();
                       onOpenNewClient();
                     }}
-                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
+                    className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
                   >
                     <Plus className="w-3 h-3" /> Novi klijent
                   </button>
@@ -239,18 +278,31 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
                   >
                     {clients.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name} ({formatCurrency(c.rate_amount)} / {c.rate_type === 'hourly' ? 'sat' : 'dan'})
+                        {c.name}
                       </option>
                     ))}
                   </select>
                 </div>
+
+                {/* Informativna kartica o ugovorenoj tarifi klijenta */}
+                {selectedClient && (
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-xs transition-all animate-in fade-in duration-200">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                      <DollarSign className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Ugovorena tarifa klijenta:</span>
+                    </div>
+                    <span className="font-extrabold text-slate-900 dark:text-white bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-800 text-[11px]">
+                      {formatCurrency(selectedClient.rate_amount)} / {selectedClient.rate_type === 'hourly' ? 'sat' : 'dan'}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Tip obračuna za stalnog klijenta */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Tip obračuna <span className="text-slate-400">(za ovaj termin)</span>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Tip obračuna <span className="text-slate-400 font-normal">(za ovaj termin)</span>
               </label>
               <select
                 value={typeWorks}
@@ -264,177 +316,213 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
             </div>
           </div>
         ) : (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Naziv klijenta / posla <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="text"
-                    value={tempClientName}
-                    onChange={(e) => setTempClientName(e.target.value)}
-                    placeholder="Npr. Popravka ograde - Marko"
-                    required
-                    className="input-field pl-10 text-sm"
-                  />
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Naziv klijenta / posla <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <User className="w-4 h-4" />
                 </div>
-              </div>
-
-              {/* Tarifa i Tip obračuna za povremenog klijenta */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Iznos tarife (€)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={tempRateAmount}
-                    onChange={(e) => setTempRateAmount(e.target.value)}
-                    className="input-field text-sm"
-                    placeholder="15"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Tip obračuna
-                  </label>
-                  <select
-                    value={typeWorks}
-                    onChange={(e) => setTypeWorks(e.target.value as 'po satu' | 'dnevno' | 'po usluzi')}
-                    className="input-field text-sm appearance-none cursor-pointer"
-                  >
-                    <option value="po satu">Po satu</option>
-                    <option value="dnevno">Dnevno / Fiksno</option>
-                    <option value="po usluzi">Po usluzi</option>
-                  </select>
-                </div>
+                <input
+                  type="text"
+                  value={tempClientName}
+                  onChange={(e) => setTempClientName(e.target.value)}
+                  placeholder="Npr. Popravka ograde - Marko"
+                  required
+                  className="input-field pl-10 text-sm"
+                />
               </div>
             </div>
-          )}
 
-          {/* Datum termina */}
+            {/* Tarifa i Tip obračuna za povremenog klijenta */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Iznos tarife (€)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={tempRateAmount}
+                  onChange={(e) => setTempRateAmount(e.target.value)}
+                  className="input-field text-sm"
+                  placeholder="15"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Tip obračuna
+                </label>
+                <select
+                  value={typeWorks}
+                  onChange={(e) => setTypeWorks(e.target.value as 'po satu' | 'dnevno' | 'po usluzi')}
+                  className="input-field text-sm appearance-none cursor-pointer"
+                >
+                  <option value="po satu">Po satu</option>
+                  <option value="dnevno">Dnevno / Fiksno</option>
+                  <option value="po usluzi">Po usluzi</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Datum termina */}
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+            Datum posla <span className="text-rose-500">*</span>
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <Calendar className="w-4 h-4" />
+            </div>
+            <input
+              type="date"
+              value={scheduledDate}
+              onChange={(e) => setScheduledDate(e.target.value)}
+              required
+              className="input-field pl-10 font-medium cursor-pointer"
+            />
+          </div>
+        </div>
+
+        {/* Vrijeme Od i Vrijeme Do */}
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Datum posla <span className="text-rose-500">*</span>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Vrijeme Od <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Calendar className="w-4 h-4" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Clock className="w-3.5 h-3.5" />
               </div>
               <input
-                type="date"
-                value={scheduledDate}
-                onChange={(e) => setScheduledDate(e.target.value)}
+                type="time"
+                value={timeFrom}
+                onChange={(e) => setTimeFrom(e.target.value)}
                 required
-                className="input-field pl-10 font-medium"
+                className="input-field pl-8 text-sm cursor-pointer"
               />
             </div>
           </div>
 
-          {/* Vrijeme Od i Vrijeme Do */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Vrijeme Od <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <Clock className="w-3.5 h-3.5" />
-                </div>
-                <input
-                  type="time"
-                  value={timeFrom}
-                  onChange={(e) => setTimeFrom(e.target.value)}
-                  required
-                  className="input-field pl-8 text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Vrijeme Do <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <Clock className="w-3.5 h-3.5" />
-                </div>
-                <input
-                  type="time"
-                  value={timeTo}
-                  onChange={(e) => setTimeTo(e.target.value)}
-                  required
-                  className="input-field pl-8 text-sm"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Opis zadatka */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Opis posla / zadatka <span className="text-rose-500">*</span>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Vrijeme Do <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
-              <div className="absolute top-3 left-3 text-slate-400 pointer-events-none">
-                <FileText className="w-4 h-4" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Clock className="w-3.5 h-3.5" />
               </div>
-              <textarea
-                value={taskDescription}
-                onChange={(e) => setTaskDescription(e.target.value)}
-                placeholder="Npr. Peglanje i generalno čišćenje dnevne sobe..."
+              <input
+                type="time"
+                value={timeTo}
+                onChange={(e) => setTimeTo(e.target.value)}
                 required
-                rows={2}
-                className="input-field pl-10 text-xs sm:text-sm py-2.5 resize-none"
+                className="input-field pl-8 text-sm cursor-pointer"
               />
             </div>
           </div>
+        </div>
 
-          {/* Procijenjeno trajanje i zarada */}
-          <div className="p-3 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-900/60 flex items-center justify-between text-xs">
-            <div>
-              <span className="text-indigo-900/70 dark:text-indigo-300 block font-medium">
-                Planirano trajanje:
-              </span>
-              <span className="font-bold text-slate-900 dark:text-white">
-                {formatMinutesToHours(totalMinutes)}
-              </span>
+        {/* Opis zadatka / Bilješke sa istorijskim šablonima */}
+        <div className="relative">
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+              Opis posla / zadatka <span className="text-rose-500">*</span>
+            </label>
+            {existingDescriptions.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowDescDropdown(!showDescDropdown)}
+                className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+              >
+                <History className="w-3 h-3" />
+                <span>{showDescDropdown ? 'Zatvori šablone' : 'Česti šabloni'}</span>
+                {showDescDropdown ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </button>
+            )}
+          </div>
+          <div className="relative">
+            <div className="absolute top-3 left-3 text-slate-400 pointer-events-none">
+              <FileText className="w-4 h-4" />
             </div>
-
-            <div className="text-right">
-              <span className="text-indigo-900/70 dark:text-indigo-300 block font-medium">
-                Očekivana zarada:
-              </span>
-              <span className="font-extrabold text-base text-indigo-600 dark:text-indigo-400">
-                {formatCurrency(estimatedEarned)}
-              </span>
-            </div>
+            <textarea
+              value={taskDescription}
+              onChange={(e) => setTaskDescription(e.target.value)}
+              placeholder="Npr. Peglanje i generalno čišćenje dnevne sobe..."
+              required
+              rows={2}
+              className="input-field pl-10 text-xs sm:text-sm py-2.5 resize-none"
+            />
           </div>
 
-          {/* Dugme za spremanje */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full btn-primary mt-2 py-3 text-sm font-semibold"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Zakazivanje...</span>
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4" />
-                <span>Zakaži termin u kalendaru</span>
-              </>
-            )}
-          </button>
-        </form>
+          {/* Spisak unetih šablona (dropdown na klik) */}
+          {showDescDropdown && existingDescriptions.length > 0 && (
+            <div className="absolute z-50 left-0 right-0 mt-1 max-h-40 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg p-1.5 space-y-0.5 animate-in slide-in-from-top-1 duration-150">
+              <div className="text-[10px] font-bold text-slate-400 px-2.5 py-1 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/80 mb-1">
+                Odaberite šablon za automatski upis:
+              </div>
+              {existingDescriptions.map((desc) => (
+                <button
+                  key={desc}
+                  type="button"
+                  onClick={() => {
+                    setTaskDescription(desc);
+                    setShowDescDropdown(false);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium transition-colors truncate"
+                  title={desc}
+                >
+                  {desc}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Procijenjeno trajanje i zarada */}
+        <div className="p-3 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-900/60 flex items-center justify-between text-xs">
+          <div>
+            <span className="text-indigo-900/70 dark:text-indigo-300 block font-medium">
+              Planirano trajanje:
+            </span>
+            <span className="font-bold text-slate-900 dark:text-white">
+              {formatMinutesToHours(totalMinutes)}
+            </span>
+          </div>
+
+          <div className="text-right">
+            <span className="text-indigo-900/70 dark:text-indigo-300 block font-medium">
+              Očekivana zarada:
+            </span>
+            <span className="font-extrabold text-base text-indigo-600 dark:text-indigo-400">
+              {formatCurrency(estimatedEarned)}
+            </span>
+          </div>
+        </div>
+
+        {/* Dugme za spremanje */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full btn-primary mt-2 py-3 text-sm font-semibold"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Zakazivanje...</span>
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" />
+              <span>Zakaži termin u kalendaru</span>
+            </>
+          )}
+        </button>
+      </form>
     </ModalWrapper>
   );
 };
