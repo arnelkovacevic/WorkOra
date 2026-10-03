@@ -10,7 +10,10 @@ import {
   Loader2, 
   Filter, 
   RefreshCw, 
-  Briefcase 
+  Briefcase,
+  Search,
+  User,
+  X
 } from 'lucide-react';
 import { ModalWrapper } from '../ui/ModalWrapper';
 import { 
@@ -38,6 +41,8 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
 
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth() + 1);
+  const [selectedClient, setSelectedClient] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [monthlyLogs, setMonthlyLogs] = useState<WorkLog[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -62,18 +67,61 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
     }
   }, [isOpen, selectedYear, selectedMonth]);
 
-  // Sumarni izračun
+  // Lista jedinstvenih imena klijenata iz dohvaćenih logova (stalni i povremeni preko temp_client_name / clients.name)
+  const clientOptions = useMemo(() => {
+    const namesSet = new Set<string>();
+    monthlyLogs.forEach((log) => {
+      const name = (log.temp_client_name || log.clients?.name || '').trim();
+      if (name) {
+        namesSet.add(name);
+      }
+    });
+    return Array.from(namesSet).sort((a, b) => a.localeCompare(b, 'bs'));
+  }, [monthlyLogs]);
+
+  // Filtrirani radni unosi na osnovu odabranog klijenta i pretrage
+  const filteredLogs = useMemo(() => {
+    return monthlyLogs.filter((log) => {
+      const clientName = (log.temp_client_name || log.clients?.name || '').trim();
+      const noteText = (log.note || '').toLowerCase();
+      const typeWorks = (log.type_works || '').toLowerCase();
+      const workDate = log.work_date || '';
+
+      // 1. Filter po dropdown klijentu
+      if (selectedClient !== 'all' && clientName !== selectedClient) {
+        return false;
+      }
+
+      // 2. Filter po search pretrazi
+      if (searchQuery.trim()) {
+        const query = searchQuery.trim().toLowerCase();
+        const matches = 
+          clientName.toLowerCase().includes(query) ||
+          noteText.includes(query) ||
+          typeWorks.includes(query) ||
+          workDate.includes(query);
+
+        if (!matches) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [monthlyLogs, selectedClient, searchQuery]);
+
+  // Sumarni izračun za filtrirane podatke
   const totals = useMemo(() => {
-    const totalMinutes = monthlyLogs.reduce((acc, l) => acc + (Number(l.total_minutes) || 0), 0);
-    const totalEarned = monthlyLogs.reduce((acc, l) => acc + (Number(l.earned_amount) || 0), 0);
-    const clientsSet = new Set(monthlyLogs.map((l) => l.client_id));
+    const totalMinutes = filteredLogs.reduce((acc, l) => acc + (Number(l.total_minutes) || 0), 0);
+    const totalEarned = filteredLogs.reduce((acc, l) => acc + (Number(l.earned_amount) || 0), 0);
+    const clientsSet = new Set(filteredLogs.map((l) => (l.temp_client_name || l.clients?.name || l.client_id || 'unknown')));
     return {
       totalMinutes,
       totalEarned,
-      totalLogsCount: monthlyLogs.length,
+      totalLogsCount: filteredLogs.length,
       uniqueClientsCount: clientsSet.size,
     };
-  }, [monthlyLogs]);
+  }, [filteredLogs]);
 
   const monthName = BOSNIAN_MONTHS.find((m) => m.value === selectedMonth)?.name || `${selectedMonth}.`;
 
@@ -82,21 +130,34 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                           user?.email?.split('@')[0] || 
                           'Korisnik';
 
-  // Export u PDF
+  // Export u PDF — printa samo ono što je trenutno filtrirano
   const handleDownloadPDF = () => {
-    if (monthlyLogs.length === 0) return;
+    if (filteredLogs.length === 0) return;
     setIsExporting(true);
 
     try {
+      let displayNameWithFilter = userDisplayName;
+      if (selectedClient !== 'all') {
+        displayNameWithFilter += ` (Klijent: ${selectedClient})`;
+      } else if (searchQuery.trim()) {
+        displayNameWithFilter += ` (Pretraga: ${searchQuery.trim()})`;
+      }
+
       const doc = generateMonthlyReportPDF({
-        userDisplayName,
+        userDisplayName: displayNameWithFilter,
         userEmail: user?.email || '',
         year: selectedYear,
         month: selectedMonth,
-        workLogs: monthlyLogs,
+        workLogs: filteredLogs,
       });
 
-      doc.save(`WorkOra_Izvjestaj_${monthName}_${selectedYear}.pdf`);
+      const safeClientSuffix = selectedClient !== 'all' 
+        ? `_${selectedClient.replace(/[^a-zA-Z0-9]/g, '_')}` 
+        : searchQuery.trim() 
+        ? `_${searchQuery.trim().replace(/[^a-zA-Z0-9]/g, '_')}` 
+        : '';
+
+      doc.save(`WorkOra_Izvjestaj_${monthName}_${selectedYear}${safeClientSuffix}.pdf`);
     } catch (err) {
       console.error('Greška pri kreiranju PDF-a:', err);
     } finally {
@@ -104,53 +165,130 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
     }
   };
 
+  const hasActiveFilters = selectedClient !== 'all' || searchQuery.trim() !== '';
+
+  const handleResetFilters = () => {
+    setSelectedClient('all');
+    setSearchQuery('');
+  };
+
   return (
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
       title="Dnevni Izvještaj & PDF Export"
-      subtitle={`Službeni mjesečni pregled radnih sati i izrada PDF izvještaja`}
+      subtitle="Službeni mjesečni pregled radnih sati i izrada PDF izvještaja"
       icon={<FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
     >
       <div className="space-y-4">
-        {/* Filteri Mjeseca i Godine */}
-        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-slate-200/80 dark:border-slate-800">
-          <div className="relative flex-1">
-            <label className="text-[10px] font-bold text-slate-400 block px-1 mb-0.5">
-              Odabir Mjeseca
-            </label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="input-field py-1.5 text-xs font-semibold cursor-pointer"
-            >
-              {BOSNIAN_MONTHS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
+        {/* Filteri: Mjesec, Godina, Klijent i Search Bar */}
+        <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+          {/* Red 1: Mjesec i Godina */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="col-span-1 sm:col-span-2">
+              <label className="text-[10px] font-bold text-slate-400 block px-1 mb-0.5">
+                Odabir Mjeseca
+              </label>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                className="input-field py-1.5 text-xs font-semibold cursor-pointer"
+              >
+                {BOSNIAN_MONTHS.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-span-1">
+              <label className="text-[10px] font-bold text-slate-400 block px-1 mb-0.5">
+                Godina
+              </label>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="input-field py-1.5 text-xs font-semibold cursor-pointer"
+              >
+                {availableYears.map((yr) => (
+                  <option key={yr} value={yr}>
+                    {yr}.
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="w-28">
-            <label className="text-[10px] font-bold text-slate-400 block px-1 mb-0.5">
-              Godina
-            </label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="input-field py-1.5 text-xs font-semibold cursor-pointer"
-            >
-              {availableYears.map((yr) => (
-                <option key={yr} value={yr}>
-                  {yr}.
-                </option>
-              ))}
-            </select>
+          {/* Red 2: Filter po Klijentu (temp_client_name) i Search Pretraga */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+            {/* Dropdown selektor klijenta */}
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 block px-1 mb-0.5">
+                Filter po Klijentu
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                  <User className="w-3.5 h-3.5" />
+                </div>
+                <select
+                  value={selectedClient}
+                  onChange={(e) => setSelectedClient(e.target.value)}
+                  className="input-field pl-8 py-1.5 text-xs font-semibold cursor-pointer"
+                >
+                  <option value="all">Svi klijenti ({monthlyLogs.length})</option>
+                  {clientOptions.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Search Bar za pretragu */}
+            <div>
+              <div className="flex items-center justify-between px-1 mb-0.5">
+                <label className="text-[10px] font-bold text-slate-400 block">
+                  Brza Pretraga
+                </label>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                  >
+                    Poništi filtere
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                  <Search className="w-3.5 h-3.5" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Pretraži klijenta, bilješku..."
+                  className="input-field pl-8 pr-7 py-1.5 text-xs"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    title="Očisti pretragu"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Sumarni panel za odabrani period */}
+        {/* Sumarni panel za filtrirani period */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
           <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-100 dark:border-indigo-900/60">
             <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 block">
@@ -172,17 +310,17 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
               {formatCurrency(totals.totalEarned)}
             </span>
             <span className="text-[10px] text-emerald-500 block">
-              {totals.uniqueClientsCount} različita klijenta
+              {totals.uniqueClientsCount} klijent(a)
             </span>
           </div>
 
           <div className="col-span-2 sm:col-span-1 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col justify-center">
             <button
               onClick={handleDownloadPDF}
-              disabled={monthlyLogs.length === 0 || isExporting}
+              disabled={filteredLogs.length === 0 || isExporting}
               type="button"
               className="w-full btn-primary py-2 px-3 text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs"
-              title="Preuzmi zvanični PDF dokument sa tabelom"
+              title="Preuzmi zvanični PDF dokument sa filtriranim stavkama"
             >
               {isExporting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -192,7 +330,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
               <span>Preuzmi PDF</span>
             </button>
             <span className="text-[9px] text-slate-400 text-center mt-1 block">
-              {monthlyLogs.length > 0 ? 'Formatirano za štampu (A4)' : 'Nema unosa za export'}
+              {filteredLogs.length > 0 ? `Štampa (${filteredLogs.length} stavki)` : 'Nema unosa'}
             </span>
           </div>
         </div>
@@ -200,8 +338,11 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
         {/* Tabela / Lista posložena po datumima */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 px-1">
-            <span>Hronološki prikaz po danima ({monthName} {selectedYear})</span>
-            <span>{monthlyLogs.length} stavki</span>
+            <span>
+              Hronološki prikaz ({monthName} {selectedYear})
+              {hasActiveFilters && <span className="text-indigo-600 dark:text-indigo-400 font-semibold ml-1.5">• Filtrirano</span>}
+            </span>
+            <span>{filteredLogs.length} od {monthlyLogs.length} stavki</span>
           </div>
 
           <div className="max-h-[44vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
@@ -210,14 +351,26 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                 <RefreshCw className="w-6 h-6 text-indigo-500 animate-spin mx-auto" />
                 <p className="text-xs text-slate-400">Učitavanje izvještaja...</p>
               </div>
-            ) : monthlyLogs.length === 0 ? (
+            ) : filteredLogs.length === 0 ? (
               <div className="text-center py-12 px-4 space-y-2">
                 <Calendar className="w-8 h-8 text-slate-400 mx-auto" />
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Nema evidentiranih poslova za {monthName} {selectedYear}.
+                  {hasActiveFilters 
+                    ? 'Nema unosa koji odgovaraju odabranom klijentu ili pretrazi.' 
+                    : `Nema evidentiranih poslova za ${monthName} ${selectedYear}.`}
                 </p>
                 <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
-                  Odaberite drugi mjesec ili dodajte radne sate preko forme na nadzornoj ploči.
+                  {hasActiveFilters ? (
+                    <button
+                      type="button"
+                      onClick={handleResetFilters}
+                      className="text-indigo-600 dark:text-indigo-400 font-semibold underline mt-1 block mx-auto"
+                    >
+                      Poništi sve filtere
+                    </button>
+                  ) : (
+                    'Odaberite drugi mjesec ili dodajte radne sate preko forme na nadzornoj ploči.'
+                  )}
                 </p>
               </div>
             ) : (
@@ -232,8 +385,8 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                  {monthlyLogs.map((log) => {
-                    const clientName = log.clients?.name || 'Nepoznat';
+                  {filteredLogs.map((log) => {
+                    const clientName = log.temp_client_name || log.clients?.name || 'Povremeni klijent';
                     const rateDisplay = log.type_works 
                       ? log.type_works
                       : log.clients?.rate_type === 'hourly'
@@ -261,7 +414,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                         <td className="py-2 px-2 text-center font-medium whitespace-nowrap">
                           {formatMinutesToHours(log.total_minutes)}
                         </td>
-                        <td className="py-2 px-2 text-right text-slate-500 whitespace-nowrap text-[11px]">
+                        <td className="py-2 px-2 text-right text-slate-500 whitespace-nowrap text-[11px] capitalize">
                           {rateDisplay}
                         </td>
                         <td className="py-2 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
@@ -275,7 +428,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                 <tfoot className="bg-slate-100 dark:bg-slate-800 font-bold border-t-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white sticky bottom-0">
                   <tr>
                     <td colSpan={2} className="py-2.5 px-3 uppercase text-[11px] tracking-wider">
-                      UKUPNO ZA {monthName}
+                      UKUPNO {hasActiveFilters ? '(FILTRIRANO)' : `ZA ${monthName}`}
                     </td>
                     <td className="py-2.5 px-2 text-center text-indigo-600 dark:text-indigo-400">
                       {formatMinutesToHours(totals.totalMinutes)}
@@ -297,12 +450,12 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
         <div className="flex items-center gap-2 pt-1">
           <button
             onClick={handleDownloadPDF}
-            disabled={monthlyLogs.length === 0 || isExporting}
+            disabled={filteredLogs.length === 0 || isExporting}
             type="button"
             className="flex-1 btn-primary py-2.5 text-xs font-bold flex items-center justify-center gap-1.5"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Preuzmi Službeni PDF Izvještaj</span>
+            <span>Preuzmi Službeni PDF Izvještaj ({filteredLogs.length})</span>
           </button>
           <button
             onClick={onClose}
