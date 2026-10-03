@@ -50,6 +50,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
 }) => {
   const today = new Date();
   const todayISO = today.toISOString().split('T')[0];
+  
 
   const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth() + 1);
