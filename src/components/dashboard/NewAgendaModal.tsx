@@ -57,7 +57,7 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   // Država za bilješke/šablone
-  const [existingDescriptions, setExistingDescriptions] = useState<string[]>([]);
+  const [allAgendaEvents, setAllAgendaEvents] = useState<AgendaEvent[]>([]);
   const [showDescDropdown, setShowDescDropdown] = useState<boolean>(false);
 
   useEffect(() => {
@@ -72,35 +72,57 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
     }
   }, [initialDate, isOpen]);
 
-  // Učitavanje unetih / historijskih opisa poslova
+  // Učitavanje svih događaja agende na otvaranju modala za istoriju šablona
   useEffect(() => {
     if (isOpen) {
-      const fetchDescriptions = async () => {
-        const descSet = new Set<string>();
-        // Podrazumevani šabloni za lakši odabir
-        descSet.add('Čišćenje i peglanje');
-        descSet.add('Generalno čišćenje kuhinje');
-        descSet.add('Peglanje odjeće');
-        descSet.add('Čišćenje poslovnog prostora');
-        descSet.add('Pranje prozora i balkona');
-
+      const fetchEvents = async () => {
         try {
           const res = await getAgendaEvents();
           if (res.data) {
-            res.data.forEach((evt) => {
-              if (evt.task_description && evt.task_description.trim()) {
-                descSet.add(evt.task_description.trim());
-              }
-            });
+            setAllAgendaEvents(res.data);
           }
         } catch (e) {
           console.error('Greška pri dohvatanju šablona:', e);
         }
-        setExistingDescriptions(Array.from(descSet));
       };
-      fetchDescriptions();
+      fetchEvents();
     }
   }, [isOpen]);
+
+  // Dinamički šabloni/opisi filtrirani isključivo za odabranog klijenta
+  const existingDescriptions = useMemo(() => {
+    const descSet = new Set<string>();
+
+    // Podrazumevani generički šabloni za lakši odabir
+    descSet.add('Čišćenje i peglanje');
+    descSet.add('Generalno čišćenje kuhinje');
+    descSet.add('Peglanje odjeće');
+    descSet.add('Čišćenje poslovnog prostora');
+
+    if (agendaMode === 'permanent') {
+      if (clientId) {
+        allAgendaEvents.forEach((evt) => {
+          // Uzmi šablone koji su vezani za izabranog stalnog klijenta
+          if (evt.client_id === clientId && evt.task_description && evt.task_description.trim()) {
+            descSet.add(evt.task_description.trim());
+          }
+        });
+      }
+    } else {
+      if (tempClientName.trim()) {
+        const queryName = tempClientName.trim().toLowerCase();
+        allAgendaEvents.forEach((evt) => {
+          // Uzmi šablone koji su vezani za unesenog privremenog klijenta
+          const evtName = (evt.temp_client_name || '').trim().toLowerCase();
+          if (evtName === queryName && evt.task_description && evt.task_description.trim()) {
+            descSet.add(evt.task_description.trim());
+          }
+        });
+      }
+    }
+
+    return Array.from(descSet);
+  }, [allAgendaEvents, agendaMode, clientId, tempClientName]);
 
   // Odabrani klijent
   const selectedClient = useMemo(() => {
