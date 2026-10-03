@@ -96,11 +96,12 @@ export function generateMonthlyReportPDF({
 
   // 4. TABELA STAVKI (autoTable)
   const tableRows = workLogs.map((log, index) => {
-    const clientName = log.clients?.name || 'Nepoznat klijent';
-    const rateText =
+    const clientName = log.temp_client_name || log.clients?.name || 'Povremeni klijent';
+    const rateText = log.type_works || (
       log.clients?.rate_type === 'hourly'
         ? `${formatCurrency(log.clients.rate_amount)} / h`
-        : `${formatCurrency(log.clients?.rate_amount || 0)} / dan`;
+        : `${formatCurrency(log.clients?.rate_amount || 0)} / dan`
+    );
 
     const noteText = log.note ? `\nOpis: ${log.note}` : '';
 

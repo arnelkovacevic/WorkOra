@@ -27,7 +27,9 @@ export const WorkLogCard: React.FC<WorkLogCardProps> = ({ workLog, onDelete }) =
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
-  const clientName = workLog.clients?.name || 'Nepoznat klijent';
+  const clientName = (!workLog.client_id || workLog.temp_client_name)
+    ? (workLog.temp_client_name || workLog.clients?.name || 'Povremeni klijent')
+    : (workLog.clients?.name || workLog.temp_client_name || 'Klijent');
   const rateTypeLabel = workLog.type_works || (workLog.clients?.rate_type === 'hourly' ? 'po satu' : 'dnevno');
 
   const handleDelete = async () => {

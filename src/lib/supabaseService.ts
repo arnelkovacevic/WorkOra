@@ -12,7 +12,7 @@ export interface Client {
 export interface WorkLog {
   id: string;
   user_id: string;
-  client_id: string;
+  client_id?: string | null;
   work_date: string;
   time_from: string;
   time_to: string;
@@ -291,16 +291,18 @@ export async function deleteClient(id: string): Promise<{ success: boolean; erro
  * Pomoćna funkcija za mapiranje privremenih klijenata u virtuelne klijentske objekte
  */
 export function mapWorkLogClients(log: WorkLog): WorkLog {
-  if (log && log.temp_client_name) {
+  if (!log) return log;
+  if (!log.client_id || log.temp_client_name) {
+    const displayName = log.temp_client_name || log.clients?.name || 'Povremeni klijent';
     return {
       ...log,
       clients: log.clients ? {
         ...log.clients,
-        name: log.temp_client_name
+        name: displayName,
       } : {
-        id: log.client_id,
+        id: log.client_id || 'temp-client',
         user_id: log.user_id,
-        name: log.temp_client_name,
+        name: displayName,
         rate_type: 'hourly',
         rate_amount: 0,
         created_at: log.created_at
@@ -334,7 +336,7 @@ export async function getWorkLogs(): Promise<{ data: WorkLog[] | null; error: st
       // Poveži klijente
       const joinedLogs = logs.map((log) => ({
         ...log,
-        clients: clients.find((c) => c.id === log.client_id) || log.clients || null,
+        clients: (log.client_id ? clients.find((c) => c.id === log.client_id) : null) || log.clients || null,
       })).map(mapWorkLogClients);
       return { data: joinedLogs, error: null };
     }
@@ -348,7 +350,7 @@ export async function getWorkLogs(): Promise<{ data: WorkLog[] | null; error: st
  * Dodaje novi radni unos sa automatski izračunatim minutama i zaradom
  */
 export async function addWorkLog(logData: {
-  client_id: string;
+  client_id?: string | null;
   work_date: string;
   time_from: string;
   time_to: string;
@@ -359,20 +361,29 @@ export async function addWorkLog(logData: {
   type_works?: string | null;
 }): Promise<{ data: WorkLog | null; error: string | null }> {
   try {
+    const rawId = logData.client_id ? String(logData.client_id).trim() : '';
+    const cleanClientId = (rawId && rawId !== 'temp-client' && rawId !== 'null' && rawId !== 'undefined')
+      ? rawId
+      : null;
+
+    const cleanTimeFrom = (logData.time_from || '00:00').slice(0, 5);
+    const cleanTimeTo = (logData.time_to || '00:00').slice(0, 5);
+    const finalTypeWorks = logData.type_works || 'po satu';
+
     if (isSupabaseConfigured) {
       const { data, error } = await supabase
         .from('work_logs')
         .insert([
           {
-            client_id: logData.client_id,
+            client_id: cleanClientId,
             work_date: logData.work_date,
-            time_from: logData.time_from,
-            time_to: logData.time_to,
-            total_minutes: Number(logData.total_minutes),
-            earned_amount: Number(logData.earned_amount),
+            time_from: cleanTimeFrom,
+            time_to: cleanTimeTo,
+            total_minutes: Number(logData.total_minutes) || 0,
+            earned_amount: Number(logData.earned_amount) || 0,
             note: logData.note?.trim() || null,
             temp_client_name: logData.temp_client_name?.trim() || null,
-            type_works: logData.type_works || null,
+            type_works: finalTypeWorks,
           },
         ])
         .select('*, clients(*)')
@@ -385,20 +396,20 @@ export async function addWorkLog(logData: {
     } else {
       // Demo mod
       const clients = getLocalClients();
-      const matchedClient = clients.find((c) => c.id === logData.client_id) || null;
+      const matchedClient = cleanClientId ? (clients.find((c) => c.id === cleanClientId) || null) : null;
 
       const newLog: WorkLog = {
         id: `log-${Date.now()}`,
         user_id: 'demo-user-123',
-        client_id: logData.client_id,
+        client_id: cleanClientId,
         work_date: logData.work_date,
-        time_from: logData.time_from,
-        time_to: logData.time_to,
-        total_minutes: Number(logData.total_minutes),
-        earned_amount: Number(logData.earned_amount),
+        time_from: cleanTimeFrom,
+        time_to: cleanTimeTo,
+        total_minutes: Number(logData.total_minutes) || 0,
+        earned_amount: Number(logData.earned_amount) || 0,
         note: logData.note?.trim() || null,
         temp_client_name: logData.temp_client_name?.trim() || null,
-        type_works: logData.type_works || null,
+        type_works: finalTypeWorks,
         created_at: new Date().toISOString(),
         clients: matchedClient,
       };
@@ -681,19 +692,28 @@ export async function addAgendaEvent(data: {
   type_works?: string | null;
 }): Promise<{ data: AgendaEvent | null; error: string | null }> {
   try {
+    const rawId = data.client_id ? String(data.client_id).trim() : '';
+    const cleanClientId = (rawId && rawId !== 'temp-client' && rawId !== 'null' && rawId !== 'undefined')
+      ? rawId
+      : null;
+
+    const cleanTimeFrom = (data.time_from || '00:00').slice(0, 5);
+    const cleanTimeTo = (data.time_to || '00:00').slice(0, 5);
+    const finalTypeWorks = data.type_works || 'po satu';
+
     if (isSupabaseConfigured) {
       const { data: created, error } = await supabase
         .from('agenda')
         .insert([
           {
-            client_id: data.client_id || null,
+            client_id: cleanClientId,
             scheduled_date: data.scheduled_date,
-            time_from: data.time_from,
-            time_to: data.time_to,
+            time_from: cleanTimeFrom,
+            time_to: cleanTimeTo,
             task_description: data.task_description.trim(),
             status: 'scheduled',
             temp_client_name: data.temp_client_name?.trim() || null,
-            type_works: data.type_works || 'po satu',
+            type_works: finalTypeWorks,
           },
         ])
         .select('*, clients(*)')
@@ -705,18 +725,18 @@ export async function addAgendaEvent(data: {
       return { data: mapAgendaClients(created as AgendaEvent), error: null };
     } else {
       const clients = getLocalClients();
-      const matchedClient = data.client_id ? (clients.find((c) => c.id === data.client_id) || null) : null;
+      const matchedClient = cleanClientId ? (clients.find((c) => c.id === cleanClientId) || null) : null;
 
       const newEvent: AgendaEvent = {
         id: `agenda-${Date.now()}`,
         user_id: 'demo-user-123',
-        client_id: data.client_id || null,
+        client_id: cleanClientId,
         scheduled_date: data.scheduled_date,
-        time_from: data.time_from,
-        time_to: data.time_to,
+        time_from: cleanTimeFrom,
+        time_to: cleanTimeTo,
         task_description: data.task_description.trim(),
         temp_client_name: data.temp_client_name?.trim() || null,
-        type_works: data.type_works || 'po satu',
+        type_works: finalTypeWorks,
         status: 'scheduled',
         created_at: new Date().toISOString(),
         clients: matchedClient,
@@ -827,11 +847,14 @@ export async function convertAgendaToWorkLog(agendaId: string): Promise<{
 
     // 2. Parsiraj opis zakazanog termina ili direktno koristi kolone iz baze
     const parsed = parseAgendaDescription(agendaItem.task_description);
-    const finalTempClientName = agendaItem.temp_client_name || parsed.tempClientName || null;
+    const finalTempClientName = agendaItem.temp_client_name || parsed.tempClientName || (client?.name ?? null);
     const finalTypeWorks = agendaItem.type_works || parsed.typeWorks || 'po satu';
     const isTemp = Boolean(finalTempClientName || parsed.isTemporary || !agendaItem.client_id);
 
-    const totalMinutes = calculateMinutes(agendaItem.time_from, agendaItem.time_to);
+    const cleanTimeFrom = (agendaItem.time_from || '00:00').slice(0, 5);
+    const cleanTimeTo = (agendaItem.time_to || '00:00').slice(0, 5);
+
+    const totalMinutes = calculateMinutes(cleanTimeFrom, cleanTimeTo);
     
     let earnedAmount = 0;
     const rateType = finalTypeWorks === 'po satu' ? 'hourly' : finalTypeWorks === 'dnevno' ? 'daily' : 'service';
@@ -852,12 +875,17 @@ export async function convertAgendaToWorkLog(agendaId: string): Promise<{
       }
     }
 
+    const rawId = agendaItem.client_id ? String(agendaItem.client_id).trim() : '';
+    const cleanClientId = (rawId && rawId !== 'temp-client' && rawId !== 'null' && rawId !== 'undefined')
+      ? rawId
+      : null;
+
     // 3. Dodaj u work_logs
     const logRes = await addWorkLog({
-      client_id: agendaItem.client_id || '',
+      client_id: cleanClientId,
       work_date: agendaItem.scheduled_date,
-      time_from: agendaItem.time_from,
-      time_to: agendaItem.time_to,
+      time_from: cleanTimeFrom,
+      time_to: cleanTimeTo,
       total_minutes: totalMinutes,
       earned_amount: earnedAmount,
       note: parsed.cleanDescription || agendaItem.task_description,

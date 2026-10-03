@@ -354,7 +354,9 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
           ) : (
             selectedDateEvents.map((item) => {
               const parsed = parseAgendaDescription(item.task_description);
-              const clientName = item.temp_client_name || item.clients?.name || parsed.tempClientName || 'Nepoznat klijent';
+              const clientName = (!item.client_id || item.temp_client_name)
+                ? (item.temp_client_name || item.clients?.name || parsed.tempClientName || 'Povremeni klijent')
+                : (item.clients?.name || item.temp_client_name || parsed.tempClientName || 'Klijent');
               const typeWorks = item.type_works || parsed.typeWorks || 'po satu';
               const displayDescription = parsed.cleanDescription || item.task_description;
               const isCompleted = item.status === 'completed';

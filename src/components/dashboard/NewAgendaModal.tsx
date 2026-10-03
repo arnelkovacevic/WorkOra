@@ -156,69 +156,61 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
       subtitle="Planirajte poslove i termine kod klijenata u kalendaru"
       icon={<CalendarCheck className="w-5 h-5 text-indigo-500" />}
     >
-      {(!clients || clients.length === 0) ? (
-        <div className="text-center py-6 space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
-            <User className="w-7 h-7" />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {errorMessage && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-700 dark:text-rose-300">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{errorMessage}</span>
           </div>
-          <div>
-            <h4 className="text-base font-bold text-slate-900 dark:text-white">
-              Nemate definisanih klijenata
-            </h4>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-              Da biste zakazali termin, potrebno je prvo unijeti klijenta sa tarifom.
-            </p>
-          </div>
+        )}
+
+        {/* Tip klijenta (Stalni vs Povremeni) */}
+        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-center text-xs font-semibold">
           <button
             type="button"
-            onClick={() => {
-              onClose();
-              onOpenNewClient();
-            }}
-            className="btn-primary text-xs py-2.5 px-4 font-semibold"
+            onClick={() => setAgendaMode('permanent')}
+            className={`py-1.5 rounded-lg transition-all ${
+              agendaMode === 'permanent'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
           >
-            <Plus className="w-4 h-4" />
-            <span>Dodaj prvog klijenta</span>
+            Stalni klijent
+          </button>
+          <button
+            type="button"
+            onClick={() => setAgendaMode('temporary')}
+            className={`py-1.5 rounded-lg transition-all ${
+              agendaMode === 'temporary'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            Povremeni klijent
           </button>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {errorMessage && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-700 dark:text-rose-300">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
 
-          {/* Tip klijenta (Stalni vs Povremeni) */}
-          <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-center text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setAgendaMode('permanent')}
-              className={`py-1.5 rounded-lg transition-all ${
-                agendaMode === 'permanent'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              Stalni klijent
-            </button>
-            <button
-              type="button"
-              onClick={() => setAgendaMode('temporary')}
-              className={`py-1.5 rounded-lg transition-all ${
-                agendaMode === 'temporary'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              Povremeni klijent
-            </button>
-          </div>
-
-          {/* Polja na osnovu odabira */}
-          {agendaMode === 'permanent' ? (
-            <div className="space-y-3">
+        {/* Polja na osnovu odabira */}
+        {agendaMode === 'permanent' ? (
+          <div className="space-y-3">
+            {(!clients || clients.length === 0) ? (
+              <div className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 text-center space-y-2">
+                <p className="text-xs text-indigo-950 dark:text-indigo-200 font-medium">
+                  Nemate sačuvanih stalnih klijenata.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenNewClient();
+                  }}
+                  className="btn-primary text-xs py-1.5 px-3 font-semibold mx-auto inline-flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Dodaj prvog klijenta</span>
+                </button>
+              </div>
+            ) : (
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -253,24 +245,25 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
                   </select>
                 </div>
               </div>
+            )}
 
-              {/* Tip obračuna za stalnog klijenta */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Tip obračuna <span className="text-slate-400">(za ovaj termin)</span>
-                </label>
-                <select
-                  value={typeWorks}
-                  onChange={(e) => setTypeWorks(e.target.value as 'po satu' | 'dnevno' | 'po usluzi')}
-                  className="input-field text-sm appearance-none cursor-pointer"
-                >
-                  <option value="po satu">Po satu</option>
-                  <option value="dnevno">Dnevno / Fiksno</option>
-                  <option value="po usluzi">Po usluzi</option>
-                </select>
-              </div>
+            {/* Tip obračuna za stalnog klijenta */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                Tip obračuna <span className="text-slate-400">(za ovaj termin)</span>
+              </label>
+              <select
+                value={typeWorks}
+                onChange={(e) => setTypeWorks(e.target.value as 'po satu' | 'dnevno' | 'po usluzi')}
+                className="input-field text-sm appearance-none cursor-pointer"
+              >
+                <option value="po satu">Po satu</option>
+                <option value="dnevno">Dnevno / Fiksno</option>
+                <option value="po usluzi">Po usluzi</option>
+              </select>
             </div>
-          ) : (
+          </div>
+        ) : (
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -442,7 +435,6 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
             )}
           </button>
         </form>
-      )}
     </ModalWrapper>
   );
 };

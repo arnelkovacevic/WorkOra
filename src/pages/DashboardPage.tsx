@@ -137,11 +137,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
   const clientStatsMap = useMemo(() => {
     const map = new Map<string, { count: number; earned: number }>();
     workLogs.forEach((log) => {
-      const current = map.get(log.client_id) || { count: 0, earned: 0 };
-      map.set(log.client_id, {
-        count: current.count + 1,
-        earned: current.earned + (Number(log.earned_amount) || 0),
-      });
+      if (log.client_id) {
+        const current = map.get(log.client_id) || { count: 0, earned: 0 };
+        map.set(log.client_id, {
+          count: current.count + 1,
+          earned: current.earned + (Number(log.earned_amount) || 0),
+        });
+      }
     });
     return map;
   }, [workLogs]);

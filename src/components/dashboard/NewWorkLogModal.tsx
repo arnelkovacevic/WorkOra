@@ -154,14 +154,14 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
       : note.trim() || null;
 
     const result = await addWorkLog({
-      client_id: modalMode === 'permanent' ? clientId : (clients[0]?.id || ''),
+      client_id: modalMode === 'permanent' ? clientId : null,
       work_date: workDate,
       time_from: timeFrom,
       time_to: timeTo,
       total_minutes: totalMinutes,
       earned_amount: earnedAmount,
-      note: finalNote,
-      temp_client_name: modalMode === 'temporary' ? tempClientName.trim() : null,
+      note: note.trim() || null,
+      temp_client_name: modalMode === 'temporary' ? tempClientName.trim() : (selectedClient?.name || null),
       type_works: modalMode === 'permanent'
         ? (permRateType === 'hourly' ? 'po satu' : permRateType === 'daily' ? 'dnevno' : 'po usluzi')
         : (tempRateType === 'hourly' ? 'po satu' : tempRateType === 'daily' ? 'dnevno' : 'po usluzi')
