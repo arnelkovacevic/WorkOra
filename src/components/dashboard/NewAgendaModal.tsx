@@ -128,18 +128,15 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
     }
 
     setLoading(true);
-    
-    // Kodiranje podataka o privremenom klijentu i tipu posla u opis
-    const finalDescription = agendaMode === 'temporary'
-      ? `[Povremeni: ${tempClientName.trim()}] [Tip: ${typeWorks}] [Cijena: ${tempRateAmount}] ${taskDescription.trim()}`
-      : `[Tip: ${typeWorks}] ${taskDescription.trim()}`;
 
     const result = await addAgendaEvent({
-      client_id: agendaMode === 'permanent' ? clientId : (clients[0]?.id || ''),
+      client_id: agendaMode === 'permanent' ? clientId : null,
+      temp_client_name: agendaMode === 'temporary' ? tempClientName.trim() : (selectedClient?.name || null),
+      type_works: typeWorks,
       scheduled_date: scheduledDate,
       time_from: timeFrom,
       time_to: timeTo,
-      task_description: finalDescription,
+      task_description: taskDescription.trim(),
     });
     setLoading(false);
 

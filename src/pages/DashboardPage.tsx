@@ -649,7 +649,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ initialTab = 'over
                     >
                       <div className="min-w-0">
                         <span className="font-bold text-slate-900 dark:text-white block truncate">
-                          {agenda.clients?.name || 'Klijent'}
+                          {agenda.temp_client_name || agenda.clients?.name || 'Klijent'}
                         </span>
                         <span className="text-[10px] text-amber-800 dark:text-amber-300">
                           {formatWorkDate(agenda.scheduled_date)} • {agenda.time_from} - {agenda.time_to}

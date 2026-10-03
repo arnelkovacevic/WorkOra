@@ -353,7 +353,9 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
           ) : (
             selectedDateEvents.map((item) => {
               const parsed = parseAgendaDescription(item.task_description);
-              const clientName = parsed.isTemporary ? (parsed.tempClientName || 'Povremeni klijent') : (item.clients?.name || 'Nepoznat klijent');
+              const clientName = item.temp_client_name || item.clients?.name || parsed.tempClientName || 'Nepoznat klijent';
+              const typeWorks = item.type_works || parsed.typeWorks || 'po satu';
+              const displayDescription = parsed.cleanDescription || item.task_description;
               const isCompleted = item.status === 'completed';
               const isCancelled = item.status === 'cancelled';
               const isPending = item.status === 'scheduled';
@@ -405,12 +407,12 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
                         </span>
                         <span>•</span>
                         <span className="font-bold text-[10px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-lg border border-indigo-100/50 dark:border-indigo-900/40 capitalize">
-                          {parsed.typeWorks}
+                          {typeWorks}
                         </span>
                       </div>
 
                       <p className="text-xs font-medium text-slate-700 dark:text-slate-300 pt-0.5">
-                        {parsed.cleanDescription}
+                        {displayDescription}
                       </p>
                     </div>
 
@@ -459,7 +461,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
         onOpenNewClient={onOpenNewClient}
         onSuccess={(savedEvent) => {
           setEvents((prev) => [...prev, savedEvent]);
-          showToast(`Novi termin za "${savedEvent.clients?.name || 'klijenta'}" je zakazan!`);
+          showToast(`Novi termin za "${savedEvent.temp_client_name || savedEvent.clients?.name || 'klijenta'}" je zakazan!`);
         }}
       />
     </div>

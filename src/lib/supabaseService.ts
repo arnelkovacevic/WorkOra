@@ -28,12 +28,14 @@ export interface WorkLog {
 export interface AgendaEvent {
   id: string;
   user_id: string;
-  client_id: string;
+  client_id?: string | null;
   scheduled_date: string;
   time_from: string;
   time_to: string;
   task_description: string;
   status: 'scheduled' | 'completed' | 'cancelled';
+  temp_client_name?: string | null;
+  type_works?: string | null;
   created_at?: string;
   clients?: Client | null;
 }
@@ -592,6 +594,29 @@ function saveLocalAgenda(events: AgendaEvent[]) {
 }
 
 /**
+ * Pomoćna funkcija za mapiranje privremenih klijenata u agendi
+ */
+export function mapAgendaClients(event: AgendaEvent): AgendaEvent {
+  if (event && event.temp_client_name) {
+    return {
+      ...event,
+      clients: event.clients ? {
+        ...event.clients,
+        name: event.temp_client_name,
+      } : {
+        id: event.client_id || 'temp-client',
+        user_id: event.user_id,
+        name: event.temp_client_name,
+        rate_type: 'hourly',
+        rate_amount: 0,
+        created_at: event.created_at || new Date().toISOString(),
+      },
+    };
+  }
+  return event;
+}
+
+/**
  * Dohvata sve termine iz tabele `agenda` (opcionalno filtrirano po mjesecu/godini)
  */
 export async function getAgendaEvents(
@@ -618,7 +643,8 @@ export async function getAgendaEvents(
       if (error) {
         return { data: null, error: error.message };
       }
-      return { data: (data as AgendaEvent[]) || [], error: null };
+      const mapped = (data as AgendaEvent[] || []).map(mapAgendaClients);
+      return { data: mapped, error: null };
     } else {
       let events = getLocalAgenda();
       const clients = getLocalClients();
@@ -631,8 +657,8 @@ export async function getAgendaEvents(
 
       const joined = events.map((e) => ({
         ...e,
-        clients: clients.find((c) => c.id === e.client_id) || e.clients || null,
-      })).sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date) || a.time_from.localeCompare(b.time_from));
+        clients: (e.client_id ? clients.find((c) => c.id === e.client_id) : null) || e.clients || null,
+      })).map(mapAgendaClients).sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date) || a.time_from.localeCompare(b.time_from));
 
       return { data: joined, error: null };
     }
@@ -646,11 +672,13 @@ export async function getAgendaEvents(
  * Dodaje novi zakazani termin u tabelu `agenda`
  */
 export async function addAgendaEvent(data: {
-  client_id: string;
+  client_id?: string | null;
   scheduled_date: string;
   time_from: string;
   time_to: string;
   task_description: string;
+  temp_client_name?: string | null;
+  type_works?: string | null;
 }): Promise<{ data: AgendaEvent | null; error: string | null }> {
   try {
     if (isSupabaseConfigured) {
@@ -658,12 +686,14 @@ export async function addAgendaEvent(data: {
         .from('agenda')
         .insert([
           {
-            client_id: data.client_id,
+            client_id: data.client_id || null,
             scheduled_date: data.scheduled_date,
             time_from: data.time_from,
             time_to: data.time_to,
             task_description: data.task_description.trim(),
             status: 'scheduled',
+            temp_client_name: data.temp_client_name?.trim() || null,
+            type_works: data.type_works || 'po satu',
           },
         ])
         .select('*, clients(*)')
@@ -672,19 +702,21 @@ export async function addAgendaEvent(data: {
       if (error) {
         return { data: null, error: error.message };
       }
-      return { data: created as AgendaEvent, error: null };
+      return { data: mapAgendaClients(created as AgendaEvent), error: null };
     } else {
       const clients = getLocalClients();
-      const matchedClient = clients.find((c) => c.id === data.client_id) || null;
+      const matchedClient = data.client_id ? (clients.find((c) => c.id === data.client_id) || null) : null;
 
       const newEvent: AgendaEvent = {
         id: `agenda-${Date.now()}`,
         user_id: 'demo-user-123',
-        client_id: data.client_id,
+        client_id: data.client_id || null,
         scheduled_date: data.scheduled_date,
         time_from: data.time_from,
         time_to: data.time_to,
         task_description: data.task_description.trim(),
+        temp_client_name: data.temp_client_name?.trim() || null,
+        type_works: data.type_works || 'po satu',
         status: 'scheduled',
         created_at: new Date().toISOString(),
         clients: matchedClient,
@@ -693,7 +725,7 @@ export async function addAgendaEvent(data: {
       const current = getLocalAgenda();
       const updated = [...current, newEvent];
       saveLocalAgenda(updated);
-      return { data: newEvent, error: null };
+      return { data: mapAgendaClients(newEvent), error: null };
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Greška pri zakazivanju termina';
@@ -786,22 +818,26 @@ export async function convertAgendaToWorkLog(agendaId: string): Promise<{
         return { success: false, workLog: null, error: 'Termin nije pronađen' };
       }
       const clients = getLocalClients();
-      client = clients.find((c) => c.id === agendaItem?.client_id) || null;
+      client = (agendaItem?.client_id ? clients.find((c) => c.id === agendaItem?.client_id) : null) || null;
     }
 
     if (!agendaItem) {
       return { success: false, workLog: null, error: 'Nije moguće učitati podatke termina' };
     }
 
-    // 2. Parsiraj opis zakazanog termina da dobiješ potencijalnog privremenog klijenta i tip obračuna
+    // 2. Parsiraj opis zakazanog termina ili direktno koristi kolone iz baze
     const parsed = parseAgendaDescription(agendaItem.task_description);
+    const finalTempClientName = agendaItem.temp_client_name || parsed.tempClientName || null;
+    const finalTypeWorks = agendaItem.type_works || parsed.typeWorks || 'po satu';
+    const isTemp = Boolean(finalTempClientName || parsed.isTemporary || !agendaItem.client_id);
+
     const totalMinutes = calculateMinutes(agendaItem.time_from, agendaItem.time_to);
     
     let earnedAmount = 0;
-    const rateType = parsed.typeWorks === 'po satu' ? 'hourly' : parsed.typeWorks === 'dnevno' ? 'daily' : 'service';
+    const rateType = finalTypeWorks === 'po satu' ? 'hourly' : finalTypeWorks === 'dnevno' ? 'daily' : 'service';
 
-    if (parsed.isTemporary) {
-      const rate = parsed.tempRateAmount || 0;
+    if (isTemp) {
+      const rate = parsed.tempRateAmount || (client ? Number(client.rate_amount) : 15);
       if (rateType === 'daily' || rateType === 'service') {
         earnedAmount = rate;
       } else {
@@ -818,15 +854,15 @@ export async function convertAgendaToWorkLog(agendaId: string): Promise<{
 
     // 3. Dodaj u work_logs
     const logRes = await addWorkLog({
-      client_id: agendaItem.client_id,
+      client_id: agendaItem.client_id || '',
       work_date: agendaItem.scheduled_date,
       time_from: agendaItem.time_from,
       time_to: agendaItem.time_to,
       total_minutes: totalMinutes,
       earned_amount: earnedAmount,
-      note: parsed.cleanDescription,
-      temp_client_name: parsed.tempClientName || null,
-      type_works: parsed.typeWorks,
+      note: parsed.cleanDescription || agendaItem.task_description,
+      temp_client_name: finalTempClientName,
+      type_works: finalTypeWorks,
     });
 
     if (logRes.error || !logRes.data) {
