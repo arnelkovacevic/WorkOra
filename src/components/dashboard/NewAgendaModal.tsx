@@ -95,8 +95,6 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
 
     // Podrazumevani generički šabloni za lakši odabir
     descSet.add('Čišćenje i peglanje');
-    descSet.add('Generalno čišćenje kuhinje');
-    descSet.add('Peglanje odjeće');
     descSet.add('Čišćenje poslovnog prostora');
 
     if (agendaMode === 'permanent') {
@@ -487,6 +485,8 @@ export const NewAgendaModal: React.FC<NewAgendaModalProps> = ({
               <div className="text-[10px] font-bold text-slate-400 px-2.5 py-1 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/80 mb-1">
                 Odaberite šablon za automatski upis:
               </div>
+
+              
               {existingDescriptions.map((desc) => (
                 <button
                   key={desc}

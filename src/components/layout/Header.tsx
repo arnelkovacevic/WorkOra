@@ -70,8 +70,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenLogin, onOpenRegister }) =
 
         {/* Right Actions: Language, PWA Install, Theme Toggle, User Profile / Auth */}
         <div className="flex items-center gap-1.5 sm:gap-2.5">
-          {/* Prekidač za jezik (BS / IT) */}
-          <LanguageToggle />
+          {/* Prekidač za jezik (BS / IT)  
+            <LanguageToggle /> */}
+        
 
           {/* Theme Toggle */}
           <ThemeToggle />

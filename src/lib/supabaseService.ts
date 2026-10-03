@@ -559,6 +559,21 @@ export const BOSNIAN_MONTHS = [
   { value: 12, name: 'Decembar' },
 ];
 
+export const ITALIAN_MONTHS = [
+  { value: 1, name: 'Gennaio' },
+  { value: 2, name: 'Febbraio' },
+  { value: 3, name: 'Marzo' },
+  { value: 4, name: 'Aprile' },
+  { value: 5, name: 'Maggio' },
+  { value: 6, name: 'Giugno' },
+  { value: 7, name: 'Luglio' },
+  { value: 8, name: 'Agosto' },
+  { value: 9, name: 'Settembre' },
+  { value: 10, name: 'Ottobre' },
+  { value: 11, name: 'Novembre' },
+  { value: 12, name: 'Dicembre' },
+];
+
 // -------------------------------------------------------------
 // KALENDAR / AGENDA (Termini poslova) - CRUD & KONVERZIJA
 // -------------------------------------------------------------

@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { WorkLog, formatMinutesToHours, formatCurrency, formatWorkDate, BOSNIAN_MONTHS } from './supabaseService';
+import { WorkLog, formatMinutesToHours, formatCurrency, formatWorkDate, ITALIAN_MONTHS } from './supabaseService';
 
 export interface ReportSummaryOptions {
   userDisplayName: string;
@@ -23,7 +23,7 @@ export function generateMonthlyReportPDF({
     format: 'a4',
   });
 
-  const monthName = BOSNIAN_MONTHS.find((m) => m.value === month)?.name || `${month}.`;
+  const monthName = ITALIAN_MONTHS?.find((m) => m.value === month)?.name || `${month}.`;
 
   // Ukupne sume
   const totalMinutes = workLogs.reduce((acc, l) => acc + (Number(l.total_minutes) || 0), 0);
@@ -38,27 +38,27 @@ export function generateMonthlyReportPDF({
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
-  doc.text('WorkOra  |  Sistem za Praćenje Radnih Sati', 14, 15);
+  doc.text('WorkOra  |  Sistema di Gestione Ore lavorative', 14, 15);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.text('Zvanični izvještaj o radu', 196, 15, { align: 'right' });
+  doc.text('Rapporto ufficiale di lavoro', 196, 15, { align: 'right' });
 
   // 2. NASLOV IZVJEŠTAJA I PODACI O KORISNIKU
   doc.setTextColor(30, 41, 59); // Slate-800
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.text('WorkOra — Mjesečni Izvještaj', 14, 38);
+  doc.text('WorkOra — Report Mensile', 14, 38);
 
   doc.setFontSize(11);
   doc.setTextColor(79, 70, 229);
-  doc.text(`Period: ${monthName} ${year}. godine`, 14, 45);
+  doc.text(`Periodo: ${monthName} ${year}`, 14, 45);
 
   // Podaci o korisniku
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(71, 85, 105);
-  doc.text(`Korisnik: ${userDisplayName || 'Korisnik'} (${userEmail})`, 14, 52);
+  doc.text(`Utente: ${userDisplayName || 'Utente'} (${userEmail})`, 14, 52);
 
   // 3. SUMMARY BOX (Ukupna statistika u pravougaoniku)
   doc.setFillColor(248, 250, 252); // Slate-50
@@ -68,7 +68,7 @@ export function generateMonthlyReportPDF({
   // Kolona 1: Ukupno unosa
   doc.setFontSize(9);
   doc.setTextColor(100, 116, 139);
-  doc.text('Ukupno radnih unosa', 24, 65);
+  doc.text('Totale inserimenti', 24, 65);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.setTextColor(15, 23, 42);
@@ -78,7 +78,7 @@ export function generateMonthlyReportPDF({
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(100, 116, 139);
-  doc.text('Ukupno odrađeno sati', 85, 65);
+  doc.text('Totale ore lavorate', 85, 65);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.setTextColor(79, 70, 229);
@@ -88,7 +88,7 @@ export function generateMonthlyReportPDF({
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(100, 116, 139);
-  doc.text('Ukupan iznos za isplatu', 145, 65);
+  doc.text('Importo totale da pagare', 145, 65);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.setTextColor(16, 185, 129); // Emerald-500
@@ -96,14 +96,14 @@ export function generateMonthlyReportPDF({
 
   // 4. TABELA STAVKI (autoTable)
   const tableRows = workLogs.map((log, index) => {
-    const clientName = log.temp_client_name || log.clients?.name || 'Povremeni klijent';
+    const clientName = log.temp_client_name || log.clients?.name || 'Cliente occasionale';
     const rateText = log.type_works || (
       log.clients?.rate_type === 'hourly'
         ? `${formatCurrency(log.clients.rate_amount)} / h`
-        : `${formatCurrency(log.clients?.rate_amount || 0)} / dan`
+        : `${formatCurrency(log.clients?.rate_amount || 0)} / giorno`
     );
 
-    const noteText = log.note ? `\nOpis: ${log.note}` : '';
+    const noteText = log.note ? `\nDescrizione: ${log.note}` : '';
 
     return [
       String(index + 1),
@@ -120,8 +120,8 @@ export function generateMonthlyReportPDF({
   const tableFooter = [
     [
       '',
-      'UKUPNO',
-      `${workLogs.length} unosa posla`,
+      'TOTALE',
+      `${workLogs.length} registrazioni`,
       '',
       formatMinutesToHours(totalMinutes),
       '',
@@ -131,7 +131,7 @@ export function generateMonthlyReportPDF({
 
   autoTable(doc, {
     startY: 86,
-    head: [['#', 'Datum', 'Klijent & Bilješka', 'Vrijeme', 'Trajanje', 'Tarifa', 'Zarada']],
+    head: [['#', 'Data', 'Cliente & Note', 'Ora', 'Durata', 'Tariffa', 'Guadagno']],
     body: tableRows,
     foot: tableFooter,
     theme: 'grid',
@@ -172,9 +172,13 @@ export function generateMonthlyReportPDF({
       doc.setFontSize(8);
       doc.setTextColor(148, 163, 184);
 
-      const generatedText = `Dokument generisan: ${new Date().toLocaleDateString('bs-BA')} u ${new Date().toLocaleTimeString('bs-BA', { hour: '2-digit', minute: '2-digit' })}`;
+      const now = new Date();
+      const printDate = now.toLocaleDateString('it-IT');
+      const printTime = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+      const generatedText = `Data stampa: ${printDate} ore ${printTime} ; WorkOra.app`;
       doc.text(generatedText, 14, 290);
-      doc.text(`Stranica ${data.pageNumber} od ${pageCount}`, 196, 290, { align: 'right' });
+      doc.text(`Pagina ${data.pageNumber} di ${pageCount}`, 196, 290, { align: 'right' });
     },
   });
 

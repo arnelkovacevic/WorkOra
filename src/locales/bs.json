@@ -22,7 +22,7 @@
   "stats": {
     "totalEarned": "Ukupno Zarađeno",
     "totalHours": "Ukupno Sati",
-    "activeClients": "Aktivni Klijenti",
+    "activeClients": "Stalni Klijenti",
     "basedOnLogs": "Na osnovu {{count}} radnih unosa",
     "recordedMinutes": "{{count}} evidentiranih minuta",
     "withActiveRates": "Sa definisanim tarifama"
