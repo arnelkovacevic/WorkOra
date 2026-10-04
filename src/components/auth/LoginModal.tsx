@@ -53,6 +53,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     onOpenResetPassword();
   };
 
+  
   const handleSwitchToRegister = () => {
     onClose();
     onOpenRegister();
