@@ -997,7 +997,7 @@ export function formatWorkDate(dateStr: string): string {
 export async function updateUserPassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
   try {
     if (!newPassword || newPassword.length < 6) {
-      return { success: false, error: 'Nova lozinka mora sadržavati minimalno 6 karaktera.' };
+      return { success: false, error: 'New password must be at least 6 characters long.' };
     }
 
     if (isSupabaseConfigured) {
@@ -1017,7 +1017,7 @@ export async function updateUserPassword(newPassword: string): Promise<{ success
       return { success: true };
     }
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Greška pri promjeni lozinke!';
+    const msg = err instanceof Error ? err.message : 'Error occurred while changing the password.';
     return { success: false, error: msg };
   }
 }
@@ -1028,7 +1028,7 @@ export async function updateUserPassword(newPassword: string): Promise<{ success
 export async function deleteUserAccount(password: string): Promise<{ success: boolean; error?: string }> {
   try {
     if (!password) {
-      return { success: false, error: 'Molimo unesite vašu lozinku za potvrdu.' };
+      return { success: false, error: 'Please enter your password to confirm.' };
     }
 
     if (isSupabaseConfigured) {
@@ -1038,7 +1038,7 @@ export async function deleteUserAccount(password: string): Promise<{ success: bo
       const userId = sessionData?.session?.user?.id;
 
       if (!currentEmail || !userId) {
-        return { success: false, error: 'Korisnička sesija nije pronađena.' };
+        return { success: false, error: 'Session not found.' };
       }
 
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -1047,7 +1047,7 @@ export async function deleteUserAccount(password: string): Promise<{ success: bo
       });
 
       if (signInError) {
-        return { success: false, error: 'Netačna lozinka. Molimo provjerite unos.' };
+        return { success: false, error: 'Incorrect password. Please try again.' };
       }
 
       // 2. Brisanje podataka korisnika iz baze iz tri tabele (agenda_events, work_logs, clients)
@@ -1076,7 +1076,7 @@ export async function deleteUserAccount(password: string): Promise<{ success: bo
       if (userRaw) {
         const u = JSON.parse(userRaw);
         if (u.password && u.password !== password) {
-          return { success: false, error: 'Netačna lozinka. Molimo unesite ispravnu lozinku.' };
+          return { success: false, error: 'Incorrect password. Please try again.' };
         }
       }
       localStorage.removeItem('orawork_demo_user');
@@ -1094,7 +1094,7 @@ export async function deleteUserAccount(password: string): Promise<{ success: bo
       return { success: true };
     }
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Greška pri brisanju korisničkog naloga.';
+    const msg = err instanceof Error ? err.message : 'Error occurred while deleting the account.';
     return { success: false, error: msg };
   }
 }

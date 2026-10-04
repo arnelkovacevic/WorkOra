@@ -11,7 +11,6 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Loader2, 
-  User, 
   Mail, 
   Smartphone,
   Trash2,
@@ -28,7 +27,7 @@ import { PWAInstallButton } from '../components/layout/PWAInstallButton';
 export const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { theme, isDark, toggleTheme, setTheme } = useTheme();
+  const { isDark, toggleTheme, setTheme } = useTheme();
 
   // Lozinka stanja
   const [newPassword, setNewPassword] = useState('');
@@ -99,7 +98,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Profilna Kartica */}
+      {/* 1. PROFILNA KARTICA */}
       <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center font-black text-xl shadow-md shadow-indigo-500/20">
@@ -110,7 +109,7 @@ export const SettingsPage: React.FC = () => {
               {userDisplayName}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
-              <Mail className="w-3.5 h-3.5 text-slate-400" />
+              <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <span>{user?.email}</span>
             </p>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 mt-1 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-200 dark:border-indigo-800">
@@ -120,7 +119,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* A. IZGLED I TEMA (Theme Settings) */}
+      {/* 2. IZGLED I TEMA */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
@@ -137,7 +136,7 @@ export const SettingsPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Toggle Switch */}
+          {/* Switch Toggle */}
           <button
             type="button"
             onClick={toggleTheme}
@@ -172,7 +171,7 @@ export const SettingsPage: React.FC = () => {
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
                 <Sun className="w-4 h-4" />
               </div>
               <div>
@@ -180,7 +179,7 @@ export const SettingsPage: React.FC = () => {
                 <p className="text-[10px] text-slate-500 dark:text-slate-400">{t('settings.lightThemeDesc')}</p>
               </div>
             </div>
-            {!isDark && <CheckCircle2 className="w-4 h-4 text-indigo-600" />}
+            {!isDark && <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />}
           </button>
 
           <button
@@ -193,7 +192,7 @@ export const SettingsPage: React.FC = () => {
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-indigo-950 text-indigo-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-indigo-950 text-indigo-400 flex items-center justify-center shrink-0">
                 <Moon className="w-4 h-4" />
               </div>
               <div>
@@ -201,14 +200,30 @@ export const SettingsPage: React.FC = () => {
                 <p className="text-[10px] text-slate-500 dark:text-slate-400">{t('settings.darkThemeDesc')}</p>
               </div>
             </div>
-            {isDark && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
+            {isDark && <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />}
           </button>
         </div>
       </div>
 
-      {/* D. APLIKACIJA I INSTALACIJA */}
+      {/* 3. JEZIK APLIKACIJE */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Globe className="w-4 h-4 text-indigo-500" />
+              <span>{t('settings.language')}</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {t('settings.languageDesc')}
+            </p>
+          </div>
+          <LanguageToggle variant="button" />
+        </div>
+      </div>
+
+      {/* 4. INSTALACIJA APLIKACIJE (PWA) */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex items-center justify-between gap-4">
           <div className="space-y-0.5">
             <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Smartphone className="w-4 h-4 text-indigo-500" />
@@ -222,7 +237,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* B. SIGURNOST — PROMJENA LOZINKE */}
+      {/* 5. SIGURNOST — PROMJENA LOZINKE */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
         <div className="space-y-0.5">
           <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -253,7 +268,7 @@ export const SettingsPage: React.FC = () => {
           {/* Nova lozinka */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Nova lozinka <span className="text-rose-500">*</span>
+              {t('settings.newPassword')} <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -263,7 +278,7 @@ export const SettingsPage: React.FC = () => {
                 type={showNewPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Minimalno 6 znakova"
+                placeholder="••••••••"
                 minLength={6}
                 required
                 className="input-field pl-10 pr-11"
@@ -283,7 +298,7 @@ export const SettingsPage: React.FC = () => {
           {/* Potvrdi novu lozinku */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Potvrdi novu lozinku <span className="text-rose-500">*</span>
+              {t('settings.confirmNewPassword')} <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -293,7 +308,7 @@ export const SettingsPage: React.FC = () => {
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Ponovite novu lozinku"
+                placeholder="••••••••"
                 minLength={6}
                 required
                 className="input-field pl-10 pr-11"
@@ -318,22 +333,22 @@ export const SettingsPage: React.FC = () => {
             {passwordLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Ažuriranje lozinke...</span>
+                <span>{t('settings.passwordSaving')}</span>
               </>
             ) : (
               <>
                 <KeyRound className="w-4 h-4" />
-                <span>Sačuvaj novu lozinku</span>
+                <span>{t('settings.savePassword')}</span>
               </>
             )}
           </button>
         </form>
       </div>
 
-      {/* C. OPASNA ZONA — BRISANJE NALOGA */}
+      {/* 6. OPASNA ZONA — BRISANJE NALOGA */}
       <div className="p-5 sm:p-6 rounded-3xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/60 shadow-sm space-y-3">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
             <ShieldAlert className="w-5 h-5" />
           </div>
           <div className="space-y-1">
@@ -358,7 +373,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2-Step Modal za brisanje */}
+      {/* 2-Step Modal za brisanje naloga */}
       <DeleteAccountModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

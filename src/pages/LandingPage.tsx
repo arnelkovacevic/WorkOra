@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Smartphone, 
   Zap, 
@@ -7,10 +8,7 @@ import {
   LogIn, 
   UserPlus, 
   Sparkles, 
-  ArrowRight,
-  Download,
-  CheckCircle,
-  Wifi
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PWAInstallButton } from '../components/layout/PWAInstallButton';
@@ -24,6 +22,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenLogin,
   onOpenRegister,
 }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -41,12 +40,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200/80 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-semibold shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-indigo-500 animate-spin" />
-            <span>WorkOra — Pametno praćenje radnih sati i zarade</span>
+            <span>{t('landing.badge')}</span>
           </div>
 
           {/* Main Title */}
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15]">
-            Pratite sate, klijente i zaradu uz{' '}
+            {t('landing.titlePart1')}{' '}
             <span className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent">
               WorkOra
             </span>
@@ -54,7 +53,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* Subtitle */}
           <p className="max-w-xl mx-auto text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
-            Vodite klijente, bilježite početak i kraj rada, planirajte termine u kalendaru i generišite zvanične PDF izvještaje za isplatu u jednom kliku.
+            {t('landing.subtitle')}
           </p>
 
           {/* CTA Buttons - Mobile Touch Friendly */}
@@ -65,7 +64,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 type="button"
                 className="btn-primary py-3.5 px-6 text-sm font-bold flex items-center justify-center gap-2"
               >
-                <span>Otvori Nadzornu ploču</span>
+                <span>{t('landing.openDashboard')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             ) : (
@@ -76,7 +75,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className="btn-primary py-3.5 px-6 text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25"
                 >
                   <LogIn className="w-4 h-4" />
-                  <span>Prijava</span>
+                  <span>{t('landing.login')}</span>
                 </button>
                 <button
                   onClick={onOpenRegister}
@@ -84,7 +83,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className="py-3.5 px-6 text-sm font-semibold rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xs"
                 >
                   <UserPlus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <span>Registracija</span>
+                  <span>{t('landing.register')}</span>
                 </button>
               </>
             )}
@@ -104,10 +103,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Smartphone className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
-              99% Mobile-First
+              {t('landing.card1Title')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Dizajnirana prvenstveno za upravljanje jednom rukom na pametnom telefonu, sa brzim reakcijama na dodir.
+              {t('landing.card1Desc')}
             </p>
           </div>
 
@@ -117,10 +116,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Zap className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
-              PWA i Rad Offline
+              {t('landing.card2Title')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Integrisan Service Worker omogućava pouzdan rad i kada nemate pristup internetu ili ste u pokretu.
+              {t('landing.card2Desc')}
             </p>
           </div>
 
@@ -130,10 +129,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
-              Supabase Zaštita
+              {t('landing.card3Title')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Pouzdana autentifikacija, enkripcija lozinki i upravljanje korisničkim sesijama sa modernim standardima.
+              {t('landing.card3Desc')}
             </p>
           </div>
         </div>
@@ -143,13 +142,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center md:text-left">
               <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">
-                Spremno za upotrebu
+                {t('landing.ctaTag')}
               </span>
               <h2 className="text-xl sm:text-2xl font-bold">
-                Instalirajte aplikaciju odmah
+                {t('landing.ctaTitle')}
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 max-w-md">
-                Kliknite na dugme za instalaciju u zaglavlju ili dodajte na početni ekran Safarija/Chromea.
+                {t('landing.ctaDesc')}
               </p>
             </div>
             <div className="flex-shrink-0">

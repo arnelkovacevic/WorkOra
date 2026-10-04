@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Calendar, 
   Clock, 
@@ -35,6 +36,7 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
   onClose,
   client,
 }) => {
+  const { t, i18n } = useTranslation(); 
   const { user } = useAuth();
   const currentDate = new Date();
 
@@ -43,13 +45,16 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
   const [logs, setLogs] = useState<WorkLog[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Godine za izbor (npr. trenutna, prošla, iduća)
+  // RJEŠENJE 1: Definišemo naziv trenutno odabranog mjeseca
+  const currentMonthName = useMemo(() => {
+    return BOSNIAN_MONTHS.find((m) => m.value === selectedMonth)?.name || `${selectedMonth}`;
+  }, [selectedMonth]);
+
   const availableYears = useMemo(() => {
     const curYear = new Date().getFullYear();
     return [curYear - 1, curYear, curYear + 1];
   }, []);
 
-  // Učitavanje radnih unosa za klijenta i odabrani mjesec
   const loadClientLogs = async () => {
     if (!client) return;
     setLoading(true);
@@ -66,7 +71,6 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
     }
   }, [isOpen, client, selectedYear, selectedMonth]);
 
-  // Sumarna statistika za odabrani mjesec
   const monthStats = useMemo(() => {
     const totalMinutes = logs.reduce((acc, l) => acc + (Number(l.total_minutes) || 0), 0);
     const totalEarned = logs.reduce((acc, l) => acc + (Number(l.earned_amount) || 0), 0);
@@ -77,7 +81,6 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
     };
   }, [logs]);
 
-  // Export PDF za odabranog klijenta
   const handleExportPDF = () => {
     if (!client || logs.length === 0) return;
     const userDisplayName = (user as any)?.user_metadata?.full_name || 
@@ -85,29 +88,30 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
                             user?.email?.split('@')[0] || 
                             'Korisnik';
 
+    const currentLang = i18n.language.startsWith('bs') ? 'bs' : 'it';
+
     const doc = generateMonthlyReportPDF({
       userDisplayName: `${userDisplayName} (Klijent: ${client.name})`,
       userEmail: user?.email || '',
       year: selectedYear,
       month: selectedMonth,
       workLogs: logs,
+      language: currentLang, 
     });
 
-    const monthName = BOSNIAN_MONTHS.find((m) => m.value === selectedMonth)?.name || `${selectedMonth}`;
     const safeClientName = client.name.replace(/[^a-zA-Z0-9]/g, '_');
-    doc.save(`WorkOra_${safeClientName}_${monthName}_${selectedYear}.pdf`);
+    doc.save(`WorkOra_${safeClientName}_${currentMonthName}_${selectedYear}.pdf`);
   };
 
+  // RJEŠENJE 2: Ako klijent ne postoji, ne renderujemo sadržaj modala kako bi izbjegli greške
   if (!client) return null;
-
-  const currentMonthName = BOSNIAN_MONTHS.find((m) => m.value === selectedMonth)?.name;
 
   return (
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title={`Pregled sati: ${client.name}`}
-      subtitle={`Mesečni pregled radnih sati i finansijskog obračuna`}
+      title={`${t('clientHoursModal.title')}: ${client.name}`}
+      subtitle={t('clientHoursModal.subtitle')}
       icon={<Clock className="w-5 h-5 text-indigo-500" />}
     >
       <div className="space-y-4">
@@ -115,7 +119,7 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
         <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-slate-200/80 dark:border-slate-800">
           <div className="relative flex-1">
             <label className="text-[10px] font-bold text-slate-400 block px-1 mb-0.5">
-              Mjesec
+              {t('clientHoursModal.month')}
             </label>
             <select
               value={selectedMonth}
@@ -132,7 +136,7 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
 
           <div className="w-28">
             <label className="text-[10px] font-bold text-slate-400 block px-1 mb-0.5">
-              Godina
+              {t('clientHoursModal.year')}
             </label>
             <select
               value={selectedYear}
@@ -153,26 +157,26 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
           <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-100 dark:border-indigo-900/60">
             <div className="flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300 text-xs font-semibold mb-1">
               <Clock className="w-4 h-4" />
-              <span>Ukupno Sati</span>
+              <span>{t('clientHoursModal.totalHours')}</span>
             </div>
             <div className="text-xl font-black text-indigo-950 dark:text-white">
               {formatMinutesToHours(monthStats.totalMinutes)}
             </div>
             <span className="text-[10px] text-indigo-600/80 dark:text-indigo-400">
-              {monthStats.count} {monthStats.count === 1 ? 'posao' : 'poslova'} u {currentMonthName}
+              {monthStats.count} {monthStats.count === 1 ? t('clientHoursModal.job') : t('clientHoursModal.jobs')} {t('clientHoursModal.in')} {currentMonthName}
             </span>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-100 dark:border-emerald-900/60">
             <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 text-xs font-semibold mb-1">
               <DollarSign className="w-4 h-4" />
-              <span>Ukupna Zarada</span>
+              <span>{t('clientHoursModal.totalEarned')}</span>
             </div>
             <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">
               {formatCurrency(monthStats.totalEarned)}
             </div>
             <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400">
-              Tarifa: {formatCurrency(client.rate_amount)} / {client.rate_type === 'hourly' ? 'h' : 'dan'}
+              {t('clientHoursModal.rate')}: {formatCurrency(client.rate_amount)} / {client.rate_type === 'hourly' ? t('clientHoursModal.perHour') : t('clientHoursModal.perDay')}
             </span>
           </div>
         </div>
@@ -181,7 +185,7 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
         {logs.length > 0 && (
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Pregled stavki ({logs.length}):
+              {t('clientHoursModal.itemsOverview')} ({logs.length}):
             </span>
             <button
               onClick={handleExportPDF}
@@ -189,7 +193,7 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-all active:scale-95 border border-slate-200 dark:border-slate-700"
             >
               <Download className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>Preuzmi PDF</span>
+              <span>{t('clientHoursModal.downloadPdf')}</span>
             </button>
           </div>
         )}
@@ -199,16 +203,16 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
           {loading ? (
             <div className="text-center py-10 space-y-2">
               <RefreshCw className="w-6 h-6 text-indigo-500 animate-spin mx-auto" />
-              <p className="text-xs text-slate-400">Učitavanje sati za klijenta...</p>
+              <p className="text-xs text-slate-400">{t('clientHoursModal.loading')}</p>
             </div>
           ) : logs.length === 0 ? (
             <div className="text-center py-10 px-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-800 space-y-2">
               <Briefcase className="w-8 h-8 text-slate-400 mx-auto" />
               <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Nema zabilježenih sati u {currentMonthName} {selectedYear}.
+                {t('clientHoursModal.noLogs')} {currentMonthName} {selectedYear}.
               </p>
               <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
-                Za dodavanje novih poslova koristite dugme "+ Novi Unos Sati" na glavnoj tabli.
+                {t('clientHoursModal.noLogsDesc')}
               </p>
             </div>
           ) : (
@@ -243,7 +247,7 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
                       {formatCurrency(log.earned_amount)}
                     </span>
                     <span className="text-[10px] text-slate-400 block capitalize">
-                      {log.type_works || (client.rate_type === 'hourly' ? 'po satu' : 'dnevno')}
+                      {log.type_works || (client.rate_type === 'hourly' ? t('clientHoursModal.perHourText') : t('clientHoursModal.perDayText'))}
                     </span>
                   </div>
                 </div>
@@ -265,7 +269,7 @@ export const ClientHoursModal: React.FC<ClientHoursModalProps> = ({
           type="button"
           className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
         >
-          Zatvori pregled
+          {t('clientHoursModal.close')}
         </button>
       </div>
     </ModalWrapper>

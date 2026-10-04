@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Shield, Smartphone, Heart, ExternalLink, Scale, ShieldCheck } from 'lucide-react';
+import { Home, Shield, Smartphone, ExternalLink, Scale, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useOnlineStatus } from '../../hooks/usePWAInstall';
 import { WorkOraLogo } from '../ui/WorkOraLogo';
@@ -13,6 +14,7 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const location = useLocation();
   const isOnline = useOnlineStatus();
@@ -26,7 +28,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) =
       {/* Offline Toast Notifikacija kad se prekine veza */}
       {!isOnline && (
         <div className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-amber-600 text-white text-xs font-semibold shadow-xl border border-amber-400 animate-pulse">
-          <span>Offline način rada — PWA keširani podaci aktivni</span>
+          <span>{t('footer.offlineMode')}</span>
         </div>
       )}
 
@@ -43,7 +45,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) =
               }`}
             >
               <Home className="w-5 h-5" />
-              <span className="text-[10px]">Početna</span>
+              <span className="text-[10px]">{t('footer.home')}</span>
             </Link>
 
             <button
@@ -52,7 +54,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) =
               className="flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
             >
               <Shield className="w-5 h-5" />
-              <span className="text-[10px]">Prijava</span>
+              <span className="text-[10px]">{t('footer.login')}</span>
             </button>
           </div>
         </div>
@@ -69,14 +71,14 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) =
                 textClassName="text-lg font-black"
               />
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-                WorkOra je jednostavna, brza i pouzdana PWA platforma za praćenje radnih sati, vođenje klijenata, kalendar agendu poslova i automatski obračun zarade.
+                {t('footer.brandDescription')}
               </p>
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 pt-1">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold text-[11px]">
-                  <Smartphone className="w-3 h-3" /> PWA Ready
+                  <Smartphone className="w-3 h-3" /> {t('footer.pwaReady')}
                 </span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
-                  {isOnline ? 'Mreža Aktivna' : 'Keširani Režim'}
+                  {isOnline ? t('footer.networkActive') : t('footer.cachedMode')}
                 </span>
               </div>
             </div>
@@ -84,30 +86,30 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) =
             {/* Kolona 2: Navigacija */}
             <div className="space-y-2">
               <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                Navigacija
+                {t('footer.navigation')}
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
                   <Link to="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                    Početna stranica
+                    {t('footer.homePage')}
                   </Link>
                 </li>
                 {user ? (
                   <li>
                     <Link to="/dashboard" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium text-indigo-600 dark:text-indigo-400">
-                      Nadzorna ploča
+                      {t('footer.dashboard')}
                     </Link>
                   </li>
                 ) : (
                   <>
                     <li>
                       <button onClick={onOpenLogin} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                        Prijava na račun
+                        {t('footer.loginAccount')}
                       </button>
                     </li>
                     <li>
                       <button onClick={onOpenRegister} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                        Nova registracija
+                        {t('footer.newRegistration')}
                       </button>
                     </li>
                   </>
@@ -115,10 +117,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) =
               </ul>
             </div>
 
-            {/* Kolona 3: Pravni dokumenti (Usklađeno - uklonjen tehnološki stack) */}
+            {/* Kolona 3: Pravni dokumenti */}
             <div className="space-y-2">
               <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                Pravne Informacije
+                {t('footer.legalInfo')}
               </h4>
               <ul className="space-y-2 text-xs">
                 <li>
@@ -128,7 +130,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) =
                     className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5 text-left"
                   >
                     <Scale className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>Uslovi korištenja</span>
+                    <span>{t('footer.termsOfService')}</span>
                   </button>
                 </li>
                 <li>
@@ -138,7 +140,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) =
                     className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5 text-left"
                   >
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Politika privatnosti</span>
+                    <span>{t('footer.privacyPolicy')}</span>
                   </button>
                 </li>
                 <li className="pt-1">
@@ -148,7 +150,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) =
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold"
                   >
-                    <span>Orizon-AIX Podrška</span>
+                    <span>{t('footer.orizonSupport')}</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </li>
@@ -159,10 +161,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLogin, onOpenRegister }) =
           {/* Donja linija sa autorskim pravima i brendingom Orizon-AIX */}
           <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
             <p className="font-medium">
-              © 2026 WorkOra. Sva prava pridržana.
+              {t('footer.copyright')}
             </p>
             <p className="flex items-center gap-1 text-xs">
-              <span>Razvijeno od strane:</span>
+              <span>{t('footer.developedBy')}</span>
               <a 
                 href="https://orizon-aix.com"
                 target="_blank"

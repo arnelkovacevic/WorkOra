@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   FileText, 
   Download, 
@@ -36,6 +37,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const currentDate = new Date();
 
@@ -128,7 +130,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
   const userDisplayName = (user as any)?.user_metadata?.full_name || 
                           (user as any)?.fullName || 
                           user?.email?.split('@')[0] || 
-                          'Korisnik';
+                          t('dailyReportsModal.userFallback', { defaultValue: 'Korisnik' });
 
   // Export u PDF — printa samo ono što je trenutno filtrirano
   const handleDownloadPDF = () => {
@@ -138,10 +140,12 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
     try {
       let displayNameWithFilter = userDisplayName;
       if (selectedClient !== 'all') {
-        displayNameWithFilter += ` (Klijent: ${selectedClient})`;
+        displayNameWithFilter += t('dailyReportsModal.pdfClientSuffix', { client: selectedClient, defaultValue: ` (Klijent: ${selectedClient})` });
       } else if (searchQuery.trim()) {
-        displayNameWithFilter += ` (Pretraga: ${searchQuery.trim()})`;
+        displayNameWithFilter += t('dailyReportsModal.pdfSearchSuffix', { query: searchQuery.trim(), defaultValue: ` (Pretraga: ${searchQuery.trim()})` });
       }
+
+      const currentLang = i18n.language.startsWith('bs') ? 'bs' : 'it';
 
       const doc = generateMonthlyReportPDF({
         userDisplayName: displayNameWithFilter,
@@ -149,6 +153,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
         year: selectedYear,
         month: selectedMonth,
         workLogs: filteredLogs,
+        language: currentLang,
       });
 
       const safeClientSuffix = selectedClient !== 'all' 
@@ -176,8 +181,8 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Dnevni Izvještaj & PDF Export"
-      subtitle="Službeni mjesečni pregled radnih sati i izrada PDF izvještaja"
+      title={t('dailyReportsModal.title', { defaultValue: 'Dnevni Izvještaj & PDF Export' })}
+      subtitle={t('dailyReportsModal.subtitle', { defaultValue: 'Službeni mjesečni pregled radnih sati i izrada PDF izvještaja' })}
       icon={<FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
     >
       <div className="space-y-4">
@@ -187,7 +192,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <div className="col-span-1 sm:col-span-2">
               <label className="text-[10px] font-bold text-slate-400 block px-1 mb-0.5">
-                Odabir Mjeseca
+                {t('dailyReportsModal.selectMonth', { defaultValue: 'Odabir Mjeseca' })}
               </label>
               <select
                 value={selectedMonth}
@@ -204,7 +209,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
 
             <div className="col-span-1">
               <label className="text-[10px] font-bold text-slate-400 block px-1 mb-0.5">
-                Godina
+                {t('dailyReportsModal.year', { defaultValue: 'Godina' })}
               </label>
               <select
                 value={selectedYear}
@@ -225,7 +230,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
             {/* Dropdown selektor klijenta */}
             <div>
               <label className="text-[10px] font-bold text-slate-400 block px-1 mb-0.5">
-                Filter po Klijentu
+                {t('dailyReportsModal.filterByClient', { defaultValue: 'Filter po Klijentu' })}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
@@ -236,7 +241,9 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                   onChange={(e) => setSelectedClient(e.target.value)}
                   className="input-field pl-8 py-1.5 text-xs font-semibold cursor-pointer"
                 >
-                  <option value="all">Svi klijenti ({monthlyLogs.length})</option>
+                  <option value="all">
+                    {t('dailyReportsModal.allClients', { count: monthlyLogs.length, defaultValue: `Svi klijenti (${monthlyLogs.length})` })}
+                  </option>
                   {clientOptions.map((name) => (
                     <option key={name} value={name}>
                       {name}
@@ -250,7 +257,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
             <div>
               <div className="flex items-center justify-between px-1 mb-0.5">
                 <label className="text-[10px] font-bold text-slate-400 block">
-                  Brza Pretraga
+                  {t('dailyReportsModal.quickSearch', { defaultValue: 'Brza Pretraga' })}
                 </label>
                 {hasActiveFilters && (
                   <button
@@ -258,7 +265,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                     onClick={handleResetFilters}
                     className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
                   >
-                    Poništi filtere
+                    {t('dailyReportsModal.resetFilters', { defaultValue: 'Poništi filtere' })}
                   </button>
                 )}
               </div>
@@ -270,7 +277,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Pretraži klijenta, bilješku..."
+                  placeholder={t('dailyReportsModal.searchPlaceholder', { defaultValue: 'Pretraži klijenta, bilješku...' })}
                   className="input-field pl-8 pr-7 py-1.5 text-xs"
                 />
                 {searchQuery && (
@@ -278,7 +285,7 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                     type="button"
                     onClick={() => setSearchQuery('')}
                     className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                    title="Očisti pretragu"
+                    title={t('dailyReportsModal.clearSearch', { defaultValue: 'Očisti pretragu' })}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -292,25 +299,25 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
           <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-100 dark:border-indigo-900/60">
             <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 block">
-              Ukupno Sati
+              {t('dailyReportsModal.totalHours', { defaultValue: 'Ukupno Sati' })}
             </span>
             <span className="text-lg font-black text-indigo-950 dark:text-white">
               {formatMinutesToHours(totals.totalMinutes)}
             </span>
             <span className="text-[10px] text-indigo-500 block">
-              {totals.totalLogsCount} radnih unosa
+              {t('dailyReportsModal.workEntriesCount', { count: totals.totalLogsCount, defaultValue: `${totals.totalLogsCount} radnih unosa` })}
             </span>
           </div>
 
           <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-100 dark:border-emerald-900/60">
             <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block">
-              Ukupno za Isplatu
+              {t('dailyReportsModal.totalEarned', { defaultValue: 'Ukupno za Isplatu' })}
             </span>
             <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
               {formatCurrency(totals.totalEarned)}
             </span>
             <span className="text-[10px] text-emerald-500 block">
-              {totals.uniqueClientsCount} klijent(a)
+              {t('dailyReportsModal.clientsCount', { count: totals.uniqueClientsCount, defaultValue: `${totals.uniqueClientsCount} klijent(a)` })}
             </span>
           </div>
 
@@ -320,17 +327,19 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
               disabled={filteredLogs.length === 0 || isExporting}
               type="button"
               className="w-full btn-primary py-2 px-3 text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs"
-              title="Preuzmi zvanični PDF dokument sa filtriranim stavkama"
+              title={t('dailyReportsModal.downloadPdfTitle', { defaultValue: 'Preuzmi zvanični PDF dokument sa filtriranim stavkama' })}
             >
               {isExporting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
                 <Download className="w-3.5 h-3.5" />
               )}
-              <span>Preuzmi PDF</span>
+              <span>{t('dailyReportsModal.downloadPdf', { defaultValue: 'Preuzmi PDF' })}</span>
             </button>
             <span className="text-[9px] text-slate-400 text-center mt-1 block">
-              {filteredLogs.length > 0 ? `Štampa (${filteredLogs.length} stavki)` : 'Nema unosa'}
+              {filteredLogs.length > 0 
+                ? t('dailyReportsModal.printCount', { count: filteredLogs.length, defaultValue: `Štampa (${filteredLogs.length} stavki)` })
+                : t('dailyReportsModal.noLogsShort', { defaultValue: 'Nema unosa' })}
             </span>
           </div>
         </div>
@@ -339,25 +348,37 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 px-1">
             <span>
-              Hronološki prikaz ({monthName} {selectedYear})
-              {hasActiveFilters && <span className="text-indigo-600 dark:text-indigo-400 font-semibold ml-1.5">• Filtrirano</span>}
+              {t('dailyReportsModal.chronologicalOverview', { defaultValue: 'Hronološki prikaz' })} ({monthName} {selectedYear})
+              {hasActiveFilters && (
+                <span className="text-indigo-600 dark:text-indigo-400 font-semibold ml-1.5">
+                  • {t('dailyReportsModal.filtered', { defaultValue: 'Filtrirano' })}
+                </span>
+              )}
             </span>
-            <span>{filteredLogs.length} od {monthlyLogs.length} stavki</span>
+            <span>
+              {t('dailyReportsModal.itemsOfTotal', { 
+                filtered: filteredLogs.length, 
+                total: monthlyLogs.length, 
+                defaultValue: `${filteredLogs.length} od ${monthlyLogs.length} stavki` 
+              })}
+            </span>
           </div>
 
           <div className="max-h-[44vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
             {loading ? (
               <div className="text-center py-12 space-y-2">
                 <RefreshCw className="w-6 h-6 text-indigo-500 animate-spin mx-auto" />
-                <p className="text-xs text-slate-400">Učitavanje izvještaja...</p>
+                <p className="text-xs text-slate-400">
+                  {t('dailyReportsModal.loading', { defaultValue: 'Učitavanje izvještaja...' })}
+                </p>
               </div>
             ) : filteredLogs.length === 0 ? (
               <div className="text-center py-12 px-4 space-y-2">
                 <Calendar className="w-8 h-8 text-slate-400 mx-auto" />
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
                   {hasActiveFilters 
-                    ? 'Nema unosa koji odgovaraju odabranom klijentu ili pretrazi.' 
-                    : `Nema evidentiranih poslova za ${monthName} ${selectedYear}.`}
+                    ? t('dailyReportsModal.noFilteredLogs', { defaultValue: 'Nema unosa koji odgovaraju odabranom klijentu ili pretrazi.' }) 
+                    : t('dailyReportsModal.noLogsForMonth', { month: monthName, year: selectedYear, defaultValue: `Nema evidentiranih poslova za ${monthName} ${selectedYear}.` })}
                 </p>
                 <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
                   {hasActiveFilters ? (
@@ -366,10 +387,10 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                       onClick={handleResetFilters}
                       className="text-indigo-600 dark:text-indigo-400 font-semibold underline mt-1 block mx-auto"
                     >
-                      Poništi sve filtere
+                      {t('dailyReportsModal.resetAllFilters', { defaultValue: 'Poništi sve filtere' })}
                     </button>
                   ) : (
-                    'Odaberite drugi mjesec ili dodajte radne sate preko forme na nadzornoj ploči.'
+                    t('dailyReportsModal.noLogsDesc', { defaultValue: 'Odaberite drugi mjesec ili dodajte radne sate preko forme na nadzornoj ploči.' })
                   )}
                 </p>
               </div>
@@ -377,21 +398,21 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10 backdrop-blur-xs">
                   <tr>
-                    <th className="py-2.5 px-3">Datum</th>
-                    <th className="py-2.5 px-3">Klijent</th>
-                    <th className="py-2.5 px-2 text-center">Trajanje</th>
-                    <th className="py-2.5 px-2 text-right">Tarifa</th>
-                    <th className="py-2.5 px-3 text-right">Zarada</th>
+                    <th className="py-2.5 px-3">{t('dailyReportsModal.colDate', { defaultValue: 'Datum' })}</th>
+                    <th className="py-2.5 px-3">{t('dailyReportsModal.colClient', { defaultValue: 'Klijent' })}</th>
+                    <th className="py-2.5 px-2 text-center">{t('dailyReportsModal.colDuration', { defaultValue: 'Trajanje' })}</th>
+                    <th className="py-2.5 px-2 text-right">{t('dailyReportsModal.colRate', { defaultValue: 'Tarifa' })}</th>
+                    <th className="py-2.5 px-3 text-right">{t('dailyReportsModal.colEarned', { defaultValue: 'Zarada' })}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                   {filteredLogs.map((log) => {
-                    const clientName = log.temp_client_name || log.clients?.name || 'Povremeni klijent';
+                    const clientName = log.temp_client_name || log.clients?.name || t('dailyReportsModal.occasionalClient', { defaultValue: 'Povremeni klijent' });
                     const rateDisplay = log.type_works 
                       ? log.type_works
                       : log.clients?.rate_type === 'hourly'
-                        ? 'po satu'
-                        : 'dnevno';
+                        ? t('dailyReportsModal.perHour', { defaultValue: 'po satu' })
+                        : t('dailyReportsModal.perDay', { defaultValue: 'dnevno' });
 
                     return (
                       <tr key={log.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
@@ -428,13 +449,15 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
                 <tfoot className="bg-slate-100 dark:bg-slate-800 font-bold border-t-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white sticky bottom-0">
                   <tr>
                     <td colSpan={2} className="py-2.5 px-3 uppercase text-[11px] tracking-wider">
-                      UKUPNO {hasActiveFilters ? '(FILTRIRANO)' : `ZA ${monthName}`}
+                      {hasActiveFilters 
+                        ? t('dailyReportsModal.totalFiltered', { defaultValue: 'UKUPNO (FILTRIRANO)' }) 
+                        : t('dailyReportsModal.totalForMonth', { month: monthName, defaultValue: `UKUPNO ZA ${monthName}` })}
                     </td>
                     <td className="py-2.5 px-2 text-center text-indigo-600 dark:text-indigo-400">
                       {formatMinutesToHours(totals.totalMinutes)}
                     </td>
                     <td className="py-2.5 px-2 text-right text-[10px] text-slate-400 font-normal">
-                      Suma
+                      {t('dailyReportsModal.sum', { defaultValue: 'Suma' })}
                     </td>
                     <td className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">
                       {formatCurrency(totals.totalEarned)}
@@ -455,14 +478,19 @@ export const DailyReportsModal: React.FC<DailyReportsModalProps> = ({
             className="flex-1 btn-primary py-2.5 text-xs font-bold flex items-center justify-center gap-1.5"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Preuzmi Službeni PDF Izvještaj ({filteredLogs.length})</span>
+            <span>
+              {t('dailyReportsModal.downloadOfficialPdf', { 
+                count: filteredLogs.length, 
+                defaultValue: `Preuzmi Službeni PDF Izvještaj (${filteredLogs.length})` 
+              })}
+            </span>
           </button>
           <button
             onClick={onClose}
             type="button"
             className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
-            Zatvori
+            {t('dailyReportsModal.close', { defaultValue: 'Zatvori' })}
           </button>
         </div>
       </div>
