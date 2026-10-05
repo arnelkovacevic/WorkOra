@@ -84,8 +84,80 @@
     "noEvents": "Nema planiranih poslova za odabrani datum.",
     "time": "Vrijeme",
     "client": "Klijent",
-    "notes": "Bilješke"
+    "notes": "Bilješke",
+
+    "prev_month": "Prethodni mjesec",
+    "next_month": "Sljedeći mjesec",
+    "selected_date": "Odabrani datum",
+    "schedule_term_for_day": "Zakaži termin za ovaj dan",
+    "loading": "Učitavanje termina...",
+    "no_events": "Nema zakazanih termina za ovaj dan",
+    "no_events_desc": "Kliknite na dugme iznad da zakažete novi posao kod klijenta.",
+    "temp_client": "Povremeni klijent",
+    "client_fallback": "Klijent",
+    "status_completed": "Završeno i evidentirano",
+    "status_scheduled": "Zakazano",
+    "status_cancelled": "Otkazano",
+    "type_hourly": "Po satu",
+    "type_fixed": "Fiksno",
+    "convert_btn": "Pretvori u radni log",
+    "delete_btn": "Obriši termin",
+    "week_mon": "Pon",
+    "week_tue": "Uto",
+    "week_wed": "Sri",
+    "week_thu": "Čet",
+    "week_fri": "Pet",
+    "week_sat": "Sub",
+    "week_sun": "Ned",
+    "toast_converted": "Termin je uspješno završen i prebačen u vaše Radne Sate sa obračunatom zaradom!",
+    "toast_convert_failed": "Nije uspjela konverzija u radni log.",
+    "toast_deleted": "Termin je obrisan iz kalendara.",
+    "toast_delete_failed": "Nije uspjelo brisanje termina."
   },
+
+  "newagenda": {
+      "title": "Zakaži novi termin",
+      "subtitle": "Planirajte poslove i termine kod klijenata u kalendaru",
+      "permanentClient": "Stalni klijent",
+      "temporaryClient": "Povremeni klijent",
+      "noClients": "Nemate sačuvanih stalnih klijenata.",
+      "addFirstClient": "Dodaj prvog klijenta",
+      "clientLabel": "Klijent",
+      "newClientBtn": "Novi klijent",
+      "agreedRate": "Ugovorena tarifa klijenta:",
+      "perHour": "sat",
+      "perDay": "dan",
+      "billingType": "Tip obračuna",
+      "forThisEvent": "(za ovaj termin)",
+      "hourly": "Po satu",
+      "daily": "Dnevno / Fiksno",
+      "perService": "Po usluzi",
+      "clientJobName": "Naziv klijenta / posla",
+      "tempClientPlaceholder": "Npr. Popravka ograde - Marko",
+      "rateAmount": "Iznos tarife (€)",
+      "jobDate": "Datum posla",
+      "timeFrom": "Vrijeme Od",
+      "timeTo": "Vrijeme Do",
+      "jobDescription": "Opis posla / zadatka",
+      "closeTemplates": "Zatvori šablone",
+      "frequentTemplates": "Česti šabloni",
+      "descPlaceholder": "Npr. Peglanje i generalno čišćenje dnevne sobe...",
+      "selectTemplateHeader": "Odaberite šablon za automatski upis:",
+      "defaultDesc1": "Čišćenje i peglanje",
+      "defaultDesc2": "Čišćenje poslovnog prostora",
+      "plannedDuration": "Planirano trajanje:",
+      "expectedEarnings": "Očekivana zarada:",
+      "submitting": "Zakazivanje...",
+      "submitBtn": "Zakaži termin u kalendaru",
+      "errSelectClient": "Molimo odaberite klijenta sa liste.",
+      "errEnterClientName": "Molimo unesite naziv klijenta.",
+      "errSelectDate": "Molimo odaberite datum zakazanog termina.",
+      "errSelectTime": "Molimo odaberite vrijeme početka i završetka.",
+      "errTimeOrder": "Vrijeme završetka mora biti poslije početka termina.",
+      "errEnterDescription": "Molimo unesite opis zadatka / posla.",
+      "errSubmit": "Greška pri zakazivanju termina."
+    },
+  
   "settings": {
     "title": "Postavke",
     "subtitle": "Upravljajte profilom, temom aplikacije, jezikom i sigurnosnim opcijama",
@@ -356,6 +428,255 @@
     "userFallback": "Korisnik",
     "pdfClientSuffix": " (Klijent: {{client}})",
     "pdfSearchSuffix": " (Pretraga: {{query}})"
+  },
+
+  "login": {
+  "title": "Prijava na WorkOra račun",
+  "subtitle": "Unesite svoje pristupne podatke za praćenje sati i zarade",
+  "errors": {
+    "requiredFields": "Molimo popunite sva obavezna polja.",
+    "loginFailed": "Neuspješna prijava. Provjerite podatke."
+  },
+  "demo": {
+    "note": "Napomena:",
+    "text": "Aplikacija je u demo režimu. Možete unijeti bilo koji email i lozinku za prijavu."
+  },
+  "email": "Email adresa",
+  "emailPlaceholder": "ime@primjer.ba",
+  "password": "Lozinka",
+  "forgotPassword": "Zaboravili ste lozinku?",
+  "hidePassword": "Sakrij lozinku",
+  "showPassword": "Prikaži lozinku",
+  "loggingIn": "Prijavljivanje...",
+  "submit": "Prijava",
+  "noAccount": "Nemate korisnički račun?",
+  "register": "Registrujte se"
+},
+
+"registerModal": {
+      "title": "Registracija na WorkOra",
+      "subtitle": "Započnite sa praćenjem svojih poslova i radnih sati za nekoliko sekundi",
+      "errors": {
+        "fillAllFields": "Molimo popunite sva polja.",
+        "passwordMinLength": "Lozinka mora sadržavati minimalno 6 znakova.",
+        "passwordsDoNotMatch": "Lozinke se ne podudaraju. Molimo provjerite unos.",
+        "acceptTerms": "Morate prihvatiti uslove korištenja za nastavak.",
+        "registrationError": "Došlo je do greške prilikom registracije."
+      },
+      "fields": {
+        "fullName": "Ime i Prezime",
+        "fullNamePlaceholder": "Npr. Haris Hadžić",
+        "email": "Email adresa",
+        "emailPlaceholder": "ime@primjer.ba",
+        "password": "Lozinka (min. 6 znakova)",
+        "confirmPassword": "Potvrdi lozinku",
+        "hidePassword": "Sakrij lozinku",
+        "showPassword": "Prikaži lozinku"
+      },
+      "terms": {
+        "accept": "Prihvatam ",
+        "termsLink": "uslove korištenja",
+        "and": " i ",
+        "privacyLink": "politiku privatnosti",
+        "appSuffix": " WorkOra aplikacije."
+      },
+      "buttons": {
+        "creatingAccount": "Kreiranje računa...",
+        "register": "Registruj se"
+      },
+      "footer": {
+        "alreadyHaveAccount": "Već imate korisnički račun?",
+        "login": "Prijavite se"
+      }
+    },
+
+    "resetPassword": {
+  "title": "Oporavak lozinke",
+  "subtitle": "Unesite email povezan sa Vašim računom za slanje linka",
+  "errors": {
+    "enterEmail": "Molimo unesite Vašu email adresu.",
+    "sendFailed": "Nije uspjelo slanje instrukcija za reset."
+  },
+  "success": {
+    "title": "Link je poslan!",
+    "description": "Poslali smo instrukcije za ponovno postavljanje lozinke na <1>{{email}}</1>. Provjerite Vašu pristiglu poštu (ili spam folder).",
+    "backToLogin": "Nazad na prijavu"
+  },
+  "fields": {
+    "email": "Email adresa",
+    "emailPlaceholder": "ime@primjer.ba"
+  },
+  "buttons": {
+    "sending": "Slanje linka...",
+    "submit": "Pošalji link za reset",
+    "backToLogin": "Povratak na prijavu"
+  }
+},
+
+"welcomeCard": {
+  "title": "Dobrodošli u WorkOra, {{name}}!",
+  "subtitle": "Vaš račun je uspješno kreiran i aktivan",
+  "defaultUser": "Korisnik",
+  "badge": {
+    "verifiedSession": "Verifikovana sesija"
+  },
+  "nextStepsTitle": "Šta možete uraditi dalje:",
+  "features": {
+    "pwa": {
+      "title": "Instalirajte aplikaciju na početni ekran",
+      "description": "Uživajte u brzini i iskustvu nativne aplikacije bez odlaska na Google Play ili App Store."
+    },
+    "offline": {
+      "title": "Rad u offline načinu",
+      "description": "Vaši osnovni podaci i struktura ostaju dostupni čak i kad izgubite internet vezu."
+    },
+    "security": {
+      "title": "Sigurna Supabase zaštita",
+      "description": "Vaš račun je zaštićen modernim industrijskim standardima enkripcije."
+    }
+  },
+  "buttons": {
+    "goToDashboard": "Idi na Nadzornu ploču"
+  }
+},
+  "privacy": {
+    "title": "Politika privatnosti",
+    "subtitle": "Kako WorkOra štiti, obrađuje i čuva vaše privatne podatke",
+    "banner": {
+      "gdpr": "GDPR & Zaštita privatnih podataka",
+      "updated": "Ažurirano: 2026."
+    },
+    "section1": {
+      "title": "Prikupljanje podataka",
+      "desc": "WorkOra poštuje princip minimalne obrade podataka. Prikupljamo isključivo one informacije koje su nužne za funkcionisanje evidencije:",
+      "account": "Podaci o računu:",
+      "accountDesc": "Vaše ime i prezime, te važeća email adresa (potrebna za prijavu i slanje reset koda).",
+      "business": "Poslovni unosi:",
+      "businessDesc": "Imena vaših klijenata, satnice, fiksne tarife, datum posla, zabilježeno vrijeme i kratke bilješke poslova."
+    },
+    "section2": {
+      "title": "Skladištenje i sigurnost (Supabase & RLS)",
+      "desc": "Svi vaši podaci se sigurno pohranjuju u licenciranoj cloud bazi podataka Supabase (PostgreSQL). Primjenjuje se strogi protokol Row Level Security (RLS) na nivou baze podataka — to garantuje da niko osim vas, niti bilo koji drugi korisnik sistema, ne može vidjeti, pretraživati ili mijenjati vaše klijente, sate i zaradu. Lozinke se enkriptuju naprednim kriptografskim algoritmima i ne čuvaju se u čitljivom formatu."
+    },
+    "section3": {
+      "title": "Upotreba podataka",
+      "desc": "Vaši podaci se koriste isključivo za pružanje usluga unutar WorkOra aplikacije (izračun sati, generisanje PDF izvještaja, prikaz u kalendaru). Nikada ne prodajemo, ne iznajmljujemo niti dijelimo vaše lične ili poslovne podatke sa trećim stranama, marketinškim agencijama ili oglašivačima."
+    },
+    "section4": {
+      "title": "Kolačići i PWA lokalno skladište",
+      "desc": "Aplikacija ne koristi invazivne marketinške kolačiće trećih strana. Koristi se lokalno skladište vašeg preglednika (localStorage i CacheStorage) isključivo radi:",
+      "item1": "Pamćenja odabrane teme prikaza (Svijetla / Tamna tema).",
+      "item2": "Očuvanja vaše sigurne autentifikacijske sesije.",
+      "item3": "Omogućavanja rada aplikacije bez internet konekcije (Offline PWA način rada)."
+    },
+    "section5": {
+      "title": "Prava korisnika (Pravo na brisanje i uvid)",
+      "desc": "U skladu sa modernim standardima o zaštiti privatnosti, imate pravo u svakom trenutku pregledati sve unose, preuzeti ih u PDF formatu, izmijeniti ili zatražiti trajno brisanje svog korisničkog profila i svih unesenih sati i klijenata."
+    },
+    "section6": {
+      "title": "Kontakt za pitanja o privatnosti",
+      "desc": "Za sva pitanja u vezi zaštite privatnosti ili zahtjeve za brisanje podataka možete nas kontaktirati putem zvanične platforme našeg razvojnog tima:",
+      "link": "Orizon-AIX Portal (orizon-aix.com)"
+    },
+    "acceptAndClose": "Prihvatam i zatvori"
+  },
+  
+  "terms": {
+    "title": "Uslovi korištenja",
+    "subtitle": "Zvanični uslovi korištenja WorkOra PWA aplikacije",
+    "meta": {
+      "version": "Verzija: 2026.1 (EU)",
+      "effectiveDate": "Važeće od: 01.01.2026."
+    },
+    "section1": {
+      "title": "Prihvatanje uslova",
+      "desc": "Pristupanjem i korištenjem WorkOra aplikacije (u daljem tekstu: „Aplikacija“), potvrđujete da ste u potpunosti pročitali, razumjeli i prihvatili ove Uslove korištenja. Ukoliko se ne slažete sa bilo kojom odredbom ovih uslova, molimo vas da ne koristite ovu aplikaciju."
+    },
+    "section2": {
+      "title": "Opis usluge",
+      "desc": "WorkOra je progresivna web aplikacija (PWA) specijalizovana za samostalne radnike, obrtnike, freelancere i pružaoce usluga. Aplikacija omogućava digitalnu evidenciju radnih sati po klijentima, raspored poslova kroz kalendar (agendu), automatski matematički obračun zarade po satnici ili dnevnici, te generisanje službenih mjesečnih PDF izvještaja."
+    },
+    "section3": {
+      "title": "Korisnički račun i sigurnost",
+      "desc": "Za pristup punoj funkcionalnosti evidencije potrebno je kreirati korisnički račun. Korisnik je isključivo i u potpunosti odgovoran za čuvanje tajnosti svoje pristupne lozinke i email adrese. Sve radnje izvršene pod vašim korisničkim računom smatraju se vašim radnjama. U slučaju sumnje na neovlašten pristup, dužni ste odmah promijeniti lozinku ili nas obavijestiti."
+    },
+    "section4": {
+      "title": "Tačnost podataka i odgovornost",
+      "desc": "Korisnik samostalno vrši unos radnih sati, satnica, fiksnih dnevnica i naziva svojih klijenata. WorkOra i njen vlasnik ne snose odgovornost za netačne unose korisnika, greške u međusobnim finansijskim obračunima između korisnika i njegovih klijenata, niti za knjigovodstvene, poreske ili pravne propuste nastale korištenjem izvezenih PDF izvještaja."
+    },
+    "section5": {
+      "title": "Intelektualno vlasništvo",
+      "desc": "Sva autorska prava, žigovi, vizuelni identitet, logotip, dizajn i softverski kod aplikacije WorkOra isključivo su intelektualno vlasništvo razvojnog tima Orizon-AIX. Strogo je zabranjeno neovlašteno kopiranje, reverzni inženjering, distribucija ili preprodaja bilo kojeg dijela aplikacije bez izričitog pismenog odobrenja."
+    },
+    "section6": {
+      "title": "Izmjene uslova",
+      "desc": "Zadržavamo diskreciono pravo da u bilo koje vrijeme izmijenimo ili dopunimo ove Uslove korištenja radi usklađivanja sa zakonskim propisima ili uvođenja novih funkcionalnosti. Nastavak korištenja aplikacije nakon objavljivanja izmijenjenih uslova smatra se vašim prihvatanjem istih."
+    },
+    "understandAndAccept": "Razumijem i prihvatam"
+  },
+
+  
+  "pwa": {
+    "installed": "Instalirano!",
+    "installTitle": "Instaliraj kao mobilnu aplikaciju",
+    "installBtn": "Instaliraj PWA",
+    "installIosTitle": "Instaliraj na iOS uređaj",
+    "installShortBtn": "Instaliraj",
+    "iosGuide": {
+      "title": "Instalacija na iPhone / iPad",
+      "subtitle": "Samo 2 jednostavna koraka u Safariju",
+      "step1": "Kliknite na ikonicu {{icon}} u donjoj traci Safarija.",
+      "shareWord": "Dijeli (Share)",
+      "step2": "Povucite prema dole i izaberite \"Dodaj na početni ekran\" (Add to Home Screen).",
+      "understandBtn": "Razumijem"
+    }
+  },
+
+  
+  "newwork": {
+    "titleSelect": "Novi radni unos",
+    "titlePermanent": "Unos za stalnog klijenta",
+    "titleTemporary": "Unos za povremenog klijenta",
+    "subtitleSelect": "Odaberite tip klijenta za koji bilježite sate",
+    "subtitleForm": "Evidentirajte sate i obračunajte zaradu",
+    "selectPrompt": "Odaberite kako želite evidentirati ovaj radni posao:",
+    "permanentClient": "Stalni klijent",
+    "permanentClientDesc": "Klijenti koje već imate sačuvane u bazi i sa definisanom tarifom.",
+    "temporaryClient": "Povremeni klijent",
+    "temporaryClientDesc": "Brzi ili jednokratni unos bez kreiranja stalnog profila u bazi.",
+    "changeClientType": "Promijeni tip klijenta",
+    "clientLabel": "Klijent",
+    "newClientBtn": "Novi klijent",
+    "billingType": "Tip obračuna",
+    "forThisEntry": "za ovaj unos",
+    "hourly": "Po satu",
+    "daily": "Dnevno / Fiksno",
+    "perService": "Po usluzi",
+    "clientJobName": "Naziv klijenta / posla",
+    "tempClientPlaceholder": "Npr. Popravka ograde - Marko",
+    "rateAmount": "Iznos tarife (€)",
+    "workDate": "Datum rada",
+    "timeFrom": "Vrijeme Od",
+    "timeTo": "Vrijeme Do",
+    "totalHours": "Ukupno radno vrijeme:",
+    "calculatedEarned": "Izračunata zarada",
+    "rateTypeHourly": "po satu",
+    "rateTypeDaily": "dnevna tarifa",
+    "noteLabel": "Bilješka posla (opcionalno)",
+    "notePlaceholder": "Opis posla ili dodatne napomene...",
+    "saving": "Spremanje unosa...",
+    "submitBtn": "Upiši radne sate",
+    "errSelectClient": "Molimo odaberite klijenta sa liste.",
+    "errEnterClientName": "Molimo unesite naziv klijenta ili posla.",
+    "errSelectDate": "Molimo odaberite datum rada.",
+    "errSelectTime": "Molimo unesite vrijeme početka i završetka rada.",
+    "errTimeOrder": "Vrijeme završetka mora biti veće od vremena početka rada.",
+    "errSave": "Greška pri spremanju radnog unosa."
   }
 
 }
+
+
+
+
+

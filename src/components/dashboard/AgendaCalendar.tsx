@@ -38,19 +38,69 @@ interface AgendaCalendarProps {
   onWorkLogCreated?: () => void;
   onOpenNewClient: () => void;
   showToast: (msg: string) => void;
+  t?: (key: string, fallback?: string) => string;
 }
 
-const WEEK_DAYS = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
+const WEEK_DAYS_KEYS = [
+  { key: 'agenda.week_mon', default: 'Pon' },
+  { key: 'agenda.week_tue', default: 'Uto' },
+  { key: 'agenda.week_wed', default: 'Sri' },
+  { key: 'agenda.week_thu', default: 'Čet' },
+  { key: 'agenda.week_fri', default: 'Pet' },
+  { key: 'agenda.week_sat', default: 'Sub' },
+  { key: 'agenda.week_sun', default: 'Ned' },
+];
+
+/**
+ * Helper funkcija za prepoznavanje i prevod tipa rada/tarife iz Supabase baze
+ * Prepoznaje zapise poput: "tarifa 15e / sat (all'ora)", "sat", "po satu", "dnevno", "fisso", "fiksno"
+ */
+const formatTypeWorks = (rawType: string, translateFn: (key: string, fallback: string) => string): string => {
+  if (!rawType) return translateFn('agenda.type_hourly', 'Po satu');
+  const lower = rawType.toLowerCase();
+
+  // Ako sadrži oznaku za dnevno / fiksno / fisso
+  if (
+    lower.includes('dnevno') || 
+    lower.includes('fisso') || 
+    lower.includes('fiksno') || 
+    lower.includes('flat') || 
+    lower.includes('fixed')
+  ) {
+    return translateFn('agenda.type_fixed', 'Fiksno');
+  }
+
+  // Ako sadrži oznaku za sat / po satu / all'ora / hourly
+  if (
+    lower.includes('sat') || 
+    lower.includes('ora') || 
+    lower.includes('hourly') || 
+    lower.includes('po satu')
+  ) {
+    return translateFn('agenda.type_hourly', 'Po satu');
+  }
+
+  return rawType;
+};
 
 export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
   clients,
   onWorkLogCreated,
   onOpenNewClient,
   showToast,
+  t,
 }) => {
+  // Pomoćni sistem za prevođenje s podrazumijevanim tekstom ako 't' nije proslijeđen
+  const translate = (key: string, fallback: string): string => {
+    if (t) {
+      const res = t(key, fallback);
+      if (res && res !== key) return res;
+    }
+    return fallback;
+  };
+
   const today = new Date();
   const todayISO = today.toISOString().split('T')[0];
-  
 
   const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth() + 1);
@@ -151,7 +201,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
     setConvertingId(null);
 
     if (res.success) {
-      showToast('Termin je uspješno završen i prebačen u vaše Radne Sate sa obračunatom zaradom!');
+      showToast(translate('agenda.toast_converted', 'Termin je uspješno završen i prebačen u vaše Radne Sate sa obračunatom zaradom!'));
       // Ažuriraj lokalno stanje
       setEvents((prev) =>
         prev.map((e) => (e.id === eventId ? { ...e, status: 'completed' } : e))
@@ -160,7 +210,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
         onWorkLogCreated();
       }
     } else {
-      showToast(res.error || 'Nije uspjela konverzija u radni log.');
+      showToast(res.error || translate('agenda.toast_convert_failed', 'Nije uspjela konverzija u radni log.'));
     }
   };
 
@@ -169,9 +219,9 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
     const res = await deleteAgendaEvent(id);
     if (res.success) {
       setEvents((prev) => prev.filter((e) => e.id !== id));
-      showToast('Termin je obrisan iz kalendara.');
+      showToast(translate('agenda.toast_deleted', 'Termin je obrisan iz kalendara.'));
     } else {
-      showToast(res.error || 'Nije uspjelo brisanje termina.');
+      showToast(res.error || translate('agenda.toast_delete_failed', 'Nije uspjelo brisanje termina.'));
     }
   };
 
@@ -192,7 +242,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
                 {monthName} {currentYear}.
               </h2>
               <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                Planiranje termina i poslova
+                {translate('agenda.subtitle', 'Planiranje termina i poslova')}
               </span>
             </div>
           </div>
@@ -203,13 +253,13 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
               type="button"
               className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
             >
-              Danas
+              {translate('agenda.today', 'Danas')}
             </button>
             <button
               onClick={handlePrevMonth}
               type="button"
               className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
-              title="Prethodni mjesec"
+              title={translate('agenda.prev_month', 'Prethodni mjesec')}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -217,7 +267,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
               onClick={handleNextMonth}
               type="button"
               className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
-              title="Sljedeći mjesec"
+              title={translate('agenda.next_month', 'Sljedeći mjesec')}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -226,9 +276,9 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
 
         {/* Dani u sedmici (Header) */}
         <div className="grid grid-cols-7 text-center text-xs font-bold text-slate-400 py-1">
-          {WEEK_DAYS.map((day, idx) => (
-            <div key={day} className={`py-1 ${idx >= 5 ? 'text-indigo-500/80' : ''}`}>
-              {day}
+          {WEEK_DAYS_KEYS.map((dayObj, idx) => (
+            <div key={dayObj.key} className={`py-1 ${idx >= 5 ? 'text-indigo-500/80' : ''}`}>
+              {translate(dayObj.key, dayObj.default)}
             </div>
           ))}
         </div>
@@ -294,7 +344,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
                       className={`w-1.5 h-1.5 rounded-full ${
                         isSelected ? 'bg-amber-300 animate-pulse' : 'bg-amber-500'
                       }`}
-                      title="Zakazano"
+                      title={translate('agenda.status_scheduled', 'Zakazano')}
                     />
                   )}
                   {hasCompleted && (
@@ -302,7 +352,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
                       className={`w-1.5 h-1.5 rounded-full ${
                         isSelected ? 'bg-emerald-300' : 'bg-emerald-500'
                       }`}
-                      title="Odrađeno"
+                      title={translate('agenda.status_completed', 'Odrađeno')}
                     />
                   )}
                 </div>
@@ -317,7 +367,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 block uppercase tracking-wider">
-              Odabrani datum
+              {translate('agenda.selected_date', 'Odabrani datum')}
             </span>
             <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
               {formatWorkDate(selectedDate)}
@@ -330,7 +380,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
             className="btn-primary py-2 px-3.5 text-xs font-bold shadow-xs flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
-            <span>Zakaži termin za ovaj dan</span>
+            <span>{translate('agenda.schedule_term_for_day', 'Zakaži termin za ovaj dan')}</span>
           </button>
         </div>
 
@@ -339,25 +389,33 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
           {loading ? (
             <div className="text-center py-8">
               <RefreshCw className="w-6 h-6 text-indigo-500 animate-spin mx-auto" />
-              <p className="text-xs text-slate-400 mt-2">Učitavanje termina...</p>
+              <p className="text-xs text-slate-400 mt-2">
+                {translate('agenda.loading', 'Učitavanje termina...')}
+              </p>
             </div>
           ) : selectedDateEvents.length === 0 ? (
             <div className="text-center py-8 px-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-800 space-y-2">
               <CalendarIcon className="w-7 h-7 text-slate-400 mx-auto" />
               <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Nema zakazanih termina za ovaj dan
+                {translate('agenda.no_events', 'Nema zakazanih termina za ovaj dan')}
               </p>
               <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
-                Kliknite na dugme iznad da zakažete novi posao kod klijenta.
+                {translate('agenda.no_events_desc', 'Kliknite na dugme iznad da zakažete novi posao kod klijenta.')}
               </p>
             </div>
           ) : (
             selectedDateEvents.map((item) => {
               const parsed = parseAgendaDescription(item.task_description);
+              const tempClientFallback = translate('agenda.temp_client', 'Povremeni klijent');
+              const clientFallback = translate('agenda.client_fallback', 'Klijent');
+
               const clientName = (!item.client_id || item.temp_client_name)
-                ? (item.temp_client_name || item.clients?.name || parsed.tempClientName || 'Povremeni klijent')
-                : (item.clients?.name || item.temp_client_name || parsed.tempClientName || 'Klijent');
-              const typeWorks = item.type_works || parsed.typeWorks || 'po satu';
+                ? (item.temp_client_name || item.clients?.name || parsed.tempClientName || tempClientFallback)
+                : (item.clients?.name || item.temp_client_name || parsed.tempClientName || clientFallback);
+              
+              const rawTypeWorks = item.type_works || parsed.typeWorks || 'po satu';
+              const typeWorks = formatTypeWorks(rawTypeWorks, translate);
+              
               const displayDescription = parsed.cleanDescription || item.task_description;
               const isCompleted = item.status === 'completed';
               const isCancelled = item.status === 'cancelled';
@@ -384,17 +442,17 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
                         {/* Status bedž */}
                         {isCompleted && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
-                            <CheckCircle2 className="w-3 h-3" /> Završeno i evidentirano
+                            <CheckCircle2 className="w-3 h-3" /> {translate('agenda.status_completed', 'Završeno i evidentirano')}
                           </span>
                         )}
                         {isPending && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">
-                            <Clock className="w-3 h-3" /> Zakazano
+                            <Clock className="w-3 h-3" /> {translate('agenda.status_scheduled', 'Zakazano')}
                           </span>
                         )}
                         {isCancelled && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
-                            Otkazano
+                            {translate('agenda.status_cancelled', 'Otkazano')}
                           </span>
                         )}
                       </div>
@@ -427,14 +485,14 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
                           disabled={convertingId === item.id}
                           type="button"
                           className="btn-primary py-1.5 px-3 text-xs font-bold flex items-center gap-1.5 shadow-xs"
-                          title="Pretvori ovaj zakazani termin u stvarni radni unos i izračunaj zaradu"
+                          title={translate('agenda.convert_btn', 'Pretvori u radni log')}
                         >
                           {convertingId === item.id ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           ) : (
                             <Check className="w-3.5 h-3.5" />
                           )}
-                          <span>Pretvori u radni log</span>
+                          <span>{translate('agenda.convert_btn', 'Pretvori u radni log')}</span>
                         </button>
                       )}
 
@@ -442,7 +500,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
                         onClick={() => handleDelete(item.id)}
                         type="button"
                         className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        title="Obriši termin"
+                        title={translate('agenda.delete_btn', 'Obriši termin')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -464,7 +522,8 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({
         onOpenNewClient={onOpenNewClient}
         onSuccess={(savedEvent) => {
           setEvents((prev) => [...prev, savedEvent]);
-          showToast(`Novi termin za "${savedEvent.temp_client_name || savedEvent.clients?.name || 'klijenta'}" je zakazan!`);
+          const cName = savedEvent.temp_client_name || savedEvent.clients?.name || translate('agenda.client_fallback', 'klijenta');
+          showToast(`Novi termin za "${cName}" je zakazan!`);
         }}
       />
     </div>

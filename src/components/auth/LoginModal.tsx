@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next'; // Dodan import za prevode
 import { ModalWrapper } from '../ui/ModalWrapper';
 import { useAuth } from '../../context/AuthContext';
 import { WorkOraLogo } from '../ui/WorkOraLogo';
@@ -18,6 +19,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onOpenRegister,
   onOpenResetPassword,
 }) => {
+  const { t } = useTranslation(); // Inicijalizacija kuke za prevod
   const { signIn, isDemoMode } = useAuth();
   const navigate = useNavigate();
 
@@ -32,7 +34,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setErrorMessage('');
 
     if (!email.trim() || !password) {
-      setErrorMessage('Molimo popunite sva obavezna polja.');
+      setErrorMessage(t('login.errors.requiredFields'));
       return;
     }
 
@@ -44,7 +46,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       onClose();
       navigate('/dashboard');
     } else {
-      setErrorMessage(result.error || 'Neuspješna prijava. Provjerite podatke.');
+      setErrorMessage(result.error || t('login.errors.loginFailed'));
     }
   };
 
@@ -52,8 +54,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     onClose();
     onOpenResetPassword();
   };
-
-  
 
   const handleSwitchToRegister = () => {
     onClose();
@@ -64,8 +64,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Prijava na WorkOra račun"
-      subtitle="Unesite svoje pristupne podatke za praćenje sati i zarade"
+      title={t('login.title')}
+      subtitle={t('login.subtitle')}
       icon={<LogIn className="w-5 h-5 text-indigo-500" />}
     >
       <div className="flex justify-center pb-2">
@@ -76,7 +76,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* Info za Demo mod ukoliko Supabase URL nije unesen */}
         {isDemoMode && (
           <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300">
-            <strong>Napomena:</strong> Aplikacija je u demo režimu. Možete unijeti bilo koji email i lozinku za prijavu.
+            <strong>{t('login.demo.note')}</strong> {t('login.demo.text')}
           </div>
         )}
 
@@ -91,7 +91,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* Email polje */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-            Email adresa <span className="text-rose-500">*</span>
+            {t('login.email')} <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -101,7 +101,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ime@primjer.ba"
+              placeholder={t('login.emailPlaceholder')}
               required
               className="input-field pl-10"
               autoComplete="email"
@@ -113,14 +113,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Lozinka <span className="text-rose-500">*</span>
+              {t('login.password')} <span className="text-rose-500">*</span>
             </label>
             <button
               type="button"
               onClick={handleSwitchToReset}
               className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
             >
-              Zaboravili ste lozinku?
+              {t('login.forgotPassword')}
             </button>
           </div>
           <div className="relative">
@@ -140,7 +140,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              aria-label={showPassword ? 'Sakrij lozinku' : 'Prikaži lozinku'}
+              aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -156,25 +156,25 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Prijavljivanje...</span>
+              <span>{t('login.loggingIn')}</span>
             </>
           ) : (
             <>
               <LogIn className="w-4 h-4" />
-              <span>Prijava</span>
+              <span>{t('login.submit')}</span>
             </>
           )}
         </button>
 
         {/* Switch to Register */}
         <div className="text-center pt-2 text-xs text-slate-600 dark:text-slate-400">
-          Nemate korisnički račun?{' '}
+          {t('login.noAccount')}{' '}
           <button
             type="button"
             onClick={handleSwitchToRegister}
             className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline ml-1"
           >
-            Registrujte se
+            {t('login.register')}
           </button>
         </div>
       </form>

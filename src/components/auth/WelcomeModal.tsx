@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, CheckCircle2, Smartphone, ShieldCheck, Zap } from 'lucide-react';
 import { ModalWrapper } from '../ui/ModalWrapper';
 import { useAuth } from '../../context/AuthContext';
@@ -10,18 +11,19 @@ interface WelcomeModalProps {
 
 export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) => {
   const { user, isDemoMode } = useAuth();
+  const { t } = useTranslation();
 
   const userDisplayName = (user as any)?.user_metadata?.full_name || 
                           (user as any)?.fullName || 
                           user?.email?.split('@')[0] || 
-                          'Korisnik';
+                          t('welcomeCard.defaultUser');
 
   return (
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title={`Dobrodošli u WorkOra, ${userDisplayName}!`}
-      subtitle="Vaš račun je uspješno kreiran i aktivan"
+      title={t('welcomeCard.title', { name: userDisplayName })}
+      subtitle={t('welcomeCard.subtitle')}
       icon={<Sparkles className="w-5 h-5 text-indigo-500" />}
     >
       <div className="space-y-4">
@@ -38,7 +40,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
               {user?.email}
             </p>
             <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-              <CheckCircle2 className="w-3 h-3" /> Verifikovana sesija
+              <CheckCircle2 className="w-3 h-3" /> {t('welcomeCard.badge.verifiedSession')}
             </span>
           </div>
         </div>
@@ -46,7 +48,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
         {/* Feature Highlights for PWA */}
         <div className="space-y-2.5">
           <h5 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-            Šta možete uraditi dalje:
+            {t('welcomeCard.nextStepsTitle')}
           </h5>
 
           <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
@@ -55,10 +57,10 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
             </div>
             <div>
               <p className="text-xs font-semibold text-slate-900 dark:text-white">
-                Instalirajte aplikaciju na početni ekran
+                {t('welcomeCard.features.pwa.title')}
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-                Uživajte u brzini i iskustvu nativne aplikacije bez odlaska na Google Play ili App Store.
+                {t('welcomeCard.features.pwa.description')}
               </p>
             </div>
           </div>
@@ -69,10 +71,10 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
             </div>
             <div>
               <p className="text-xs font-semibold text-slate-900 dark:text-white">
-                Rad u offline načinu
+                {t('welcomeCard.features.offline.title')}
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-                Vaši osnovni podaci i struktura ostaju dostupni čak i kad izgubite internet vezu.
+                {t('welcomeCard.features.offline.description')}
               </p>
             </div>
           </div>
@@ -83,10 +85,10 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
             </div>
             <div>
               <p className="text-xs font-semibold text-slate-900 dark:text-white">
-                Sigurna Supabase zaštita
+                {t('welcomeCard.features.security.title')}
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-                Vaš račun je zaštićen modernim industrijskim standardima enkripcije.
+                {t('welcomeCard.features.security.description')}
               </p>
             </div>
           </div>
@@ -98,7 +100,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
           type="button"
           className="w-full btn-primary py-3 text-sm font-semibold mt-2"
         >
-          Idi na Nadzornu ploču
+          {t('welcomeCard.buttons.goToDashboard')}
         </button>
       </div>
     </ModalWrapper>

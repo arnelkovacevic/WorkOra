@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'; // Dodan import za i18n
 import { User, Mail, Lock, Eye, EyeOff, UserPlus, AlertCircle, Loader2, Check } from 'lucide-react';
 import { ModalWrapper } from '../ui/ModalWrapper';
 import { useAuth } from '../../context/AuthContext';
@@ -20,6 +21,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 }) => {
   const { signUp, isDemoMode } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation(); // Inicijalizacija hook-a za prevod
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -41,22 +43,22 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
     // Klijentska validacija
     if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
-      setErrorMessage('Molimo popunite sva polja.');
+      setErrorMessage(t('registerModal.errors.fillAllFields'));
       return;
     }
 
     if (password.length < 6) {
-      setErrorMessage('Lozinka mora sadržavati minimalno 6 znakova.');
+      setErrorMessage(t('registerModal.errors.passwordMinLength'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage('Lozinke se ne podudaraju. Molimo provjerite unos.');
+      setErrorMessage(t('registerModal.errors.passwordsDoNotMatch'));
       return;
     }
 
     if (!agreeTerms) {
-      setErrorMessage('Morate prihvatiti uslove korištenja za nastavak.');
+      setErrorMessage(t('registerModal.errors.acceptTerms'));
       return;
     }
 
@@ -68,7 +70,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       onClose();
       navigate('/dashboard');
     } else {
-      setErrorMessage(result.error || 'Došlo je do greške prilikom registracije.');
+      setErrorMessage(result.error || t('registerModal.errors.registrationError'));
     }
   };
 
@@ -81,8 +83,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Registracija na WorkOra"
-      subtitle="Započnite sa praćenjem svojih poslova i radnih sati za nekoliko sekundi"
+      title={t('registerModal.title')}
+      subtitle={t('registerModal.subtitle')}
       icon={<UserPlus className="w-5 h-5 text-indigo-500" />}
     >
       <div className="flex justify-center pb-1">
@@ -101,7 +103,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         {/* Ime i Prezime */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Ime i Prezime <span className="text-rose-500">*</span>
+            {t('registerModal.fields.fullName')} <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -111,7 +113,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="Npr. Haris Hadžić"
+              placeholder={t('registerModal.fields.fullNamePlaceholder')}
               required
               className="input-field pl-10"
               autoComplete="name"
@@ -122,7 +124,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         {/* Email */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Email adresa <span className="text-rose-500">*</span>
+            {t('registerModal.fields.email')} <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -132,7 +134,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ime@primjer.ba"
+              placeholder={t('registerModal.fields.emailPlaceholder')}
               required
               className="input-field pl-10"
               autoComplete="email"
@@ -143,7 +145,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         {/* Lozinka */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Lozinka (min. 6 znakova) <span className="text-rose-500">*</span>
+            {t('registerModal.fields.password')} <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -163,7 +165,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              aria-label={showPassword ? 'Sakrij lozinku' : 'Prikaži lozinku'}
+              aria-label={showPassword ? t('registerModal.fields.hidePassword') : t('registerModal.fields.showPassword')}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -173,7 +175,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         {/* Potvrda lozinke */}
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Potvrdi lozinku <span className="text-rose-500">*</span>
+            {t('registerModal.fields.confirmPassword')} <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -193,7 +195,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              aria-label={showConfirmPassword ? 'Sakrij lozinku' : 'Prikaži lozinku'}
+              aria-label={showConfirmPassword ? t('registerModal.fields.hidePassword') : t('registerModal.fields.showPassword')}
             >
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -210,7 +212,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-700 dark:bg-slate-800 cursor-pointer"
             />
             <span>
-              Prihvatam{' '}
+              {t('registerModal.terms.accept')}
               <button
                 type="button"
                 onClick={(e) => {
@@ -220,9 +222,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 }}
                 className="text-indigo-600 dark:text-indigo-400 font-semibold underline hover:text-indigo-700"
               >
-                uslove korištenja
-              </button>{' '}
-              i{' '}
+                {t('registerModal.terms.termsLink')}
+              </button>
+              {t('registerModal.terms.and')}
               <button
                 type="button"
                 onClick={(e) => {
@@ -232,9 +234,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 }}
                 className="text-indigo-600 dark:text-indigo-400 font-semibold underline hover:text-indigo-700"
               >
-                politiku privatnosti
-              </button>{' '}
-              WorkOra aplikacije.
+                {t('registerModal.terms.privacyLink')}
+              </button>
+              {t('registerModal.terms.appSuffix')}
             </span>
           </label>
         </div>
@@ -248,25 +250,25 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Kreiranje računa...</span>
+              <span>{t('registerModal.buttons.creatingAccount')}</span>
             </>
           ) : (
             <>
               <UserPlus className="w-4 h-4" />
-              <span>Registruj se</span>
+              <span>{t('registerModal.buttons.register')}</span>
             </>
           )}
         </button>
 
         {/* Switch to Login */}
         <div className="text-center pt-2 text-xs text-slate-600 dark:text-slate-400">
-          Već imate korisnički račun?{' '}
+          {t('registerModal.footer.alreadyHaveAccount')}{' '}
           <button
             type="button"
             onClick={handleSwitchToLogin}
             className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline ml-1"
           >
-            Prijavite se
+            {t('registerModal.footer.login')}
           </button>
         </div>
       </form>

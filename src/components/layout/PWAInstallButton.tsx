@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Download, Share, X, CheckCircle, Smartphone } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+  const { t } = useTranslation();
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
   const [justInstalled, setJustInstalled] = useState(false);
@@ -24,7 +26,7 @@ export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = fa
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-lg border border-emerald-200 dark:border-emerald-800">
         <CheckCircle className="w-3.5 h-3.5" />
-        Instalirano!
+        {t('pwa.installed')}
       </span>
     );
   }
@@ -40,10 +42,10 @@ export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = fa
             ? 'p-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60 text-xs'
             : 'px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-semibold'
         }`}
-        title="Instaliraj kao mobilnu aplikaciju"
+        title={t('pwa.installTitle')}
       >
         <Download className="w-4 h-4 animate-bounce" />
-        <span>Instaliraj PWA</span>
+        <span>{t('pwa.installBtn')}</span>
       </button>
     );
   }
@@ -56,10 +58,10 @@ export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = fa
           onClick={() => setShowIOSGuide(true)}
           type="button"
           className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all active:scale-95"
-          title="Instaliraj na iOS uređaj"
+          title={t('pwa.installIosTitle')}
         >
           <Smartphone className="w-3.5 h-3.5 text-indigo-500" />
-          <span>Instaliraj</span>
+          <span>{t('pwa.installShortBtn')}</span>
         </button>
 
         {showIOSGuide && (
@@ -78,10 +80,10 @@ export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = fa
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Instalacija na iPhone / iPad
+                    {t('pwa.iosGuide.title')}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Samo 2 jednostavna koraka u Safariju
+                    {t('pwa.iosGuide.subtitle')}
                   </p>
                 </div>
               </div>
@@ -92,7 +94,17 @@ export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = fa
                     1
                   </span>
                   <span>
-                    Kliknite na ikonicu <strong>Dijeli (Share <Share className="inline w-3 h-3 text-indigo-500 mx-0.5" />)</strong> u donjoj traci Safarija.
+                    <Trans
+                      i18nKey="pwa.iosGuide.step1"
+                      components={{
+                        icon: (
+                          <strong>
+                            {t('pwa.iosGuide.shareWord')}{' '}
+                            <Share className="inline w-3 h-3 text-indigo-500 mx-0.5" />
+                          </strong>
+                        )
+                      }}
+                    />
                   </span>
                 </div>
                 <div className="flex items-start gap-2.5">
@@ -100,7 +112,7 @@ export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = fa
                     2
                   </span>
                   <span>
-                    Povucite prema dole i izaberite <strong>"Dodaj na početni ekran" (Add to Home Screen)</strong>.
+                    {t('pwa.iosGuide.step2')}
                   </span>
                 </div>
               </div>
@@ -109,7 +121,7 @@ export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = fa
                 onClick={() => setShowIOSGuide(false)}
                 className="mt-5 w-full btn-primary text-sm py-2.5"
               >
-                Razumijem
+                {t('pwa.iosGuide.understandBtn')}
               </button>
             </div>
           </div>

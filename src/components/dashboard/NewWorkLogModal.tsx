@@ -11,6 +11,7 @@ import {
   Users,
   ChevronLeft
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ModalWrapper } from '../ui/ModalWrapper';
 import { 
   Client, 
@@ -38,6 +39,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
   clients,
   onOpenNewClient,
 }) => {
+  const { t } = useTranslation();
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   // Stanje koraka: 'select' (izbor) | 'permanent' (stalni) | 'temporary' (povremeni)
@@ -122,36 +124,31 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
     setErrorMessage('');
 
     if (modalMode === 'permanent' && !clientId) {
-      setErrorMessage('Molimo odaberite klijenta sa liste.');
+      setErrorMessage(t('newwork.errSelectClient', 'Molimo odaberite klijenta sa liste.'));
       return;
     }
 
     if (modalMode === 'temporary' && !tempClientName.trim()) {
-      setErrorMessage('Molimo unesite naziv klijenta ili posla.');
+      setErrorMessage(t('newwork.errEnterClientName', 'Molimo unesite naziv klijenta ili posla.'));
       return;
     }
 
     if (!workDate) {
-      setErrorMessage('Molimo odaberite datum rada.');
+      setErrorMessage(t('newwork.errSelectDate', 'Molimo odaberite datum rada.'));
       return;
     }
 
     if (!timeFrom || !timeTo) {
-      setErrorMessage('Molimo unesite vrijeme početka i završetka rada.');
+      setErrorMessage(t('newwork.errSelectTime', 'Molimo unesite vrijeme početka i završetka rada.'));
       return;
     }
 
     if (totalMinutes <= 0) {
-      setErrorMessage('Vrijeme završetka mora biti veće od vremena početka rada.');
+      setErrorMessage(t('newwork.errTimeOrder', 'Vrijeme završetka mora biti veće od vremena početka rada.'));
       return;
     }
 
     setLoading(true);
-
-    // Za povremenog klijenta možemo spakovati naziv u bilješku ako nemamo poseban client_id
-    const finalNote = modalMode === 'temporary'
-      ? `[Povremeni klijent: ${tempClientName.trim()}] ${note.trim()}`.trim()
-      : note.trim() || null;
 
     const result = await addWorkLog({
       client_id: modalMode === 'permanent' ? clientId : null,
@@ -170,7 +167,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
     setLoading(false);
 
     if (result.error || !result.data) {
-      setErrorMessage(result.error || 'Greška pri spremanju radnog unosa.');
+      setErrorMessage(result.error || t('newwork.errSave', 'Greška pri spremanju radnog unosa.'));
     } else {
       onSuccess(result.data);
       setNote('');
@@ -184,15 +181,15 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
       onClose={onClose}
       title={
         modalMode === 'select'
-          ? "Novi radni unos"
+          ? t('newwork.titleSelect', 'Novi radni unos')
           : modalMode === 'permanent'
-          ? "Unos za stalnog klijenta"
-          : "Unos za povremenog klijenta"
+          ? t('newwork.titlePermanent', 'Unos za stalnog klijenta')
+          : t('newwork.titleTemporary', 'Unos za povremenog klijenta')
       }
       subtitle={
         modalMode === 'select'
-          ? "Odaberite tip klijenta za koji bilježite sate"
-          : "Evidentirajte sate i obračunajte zaradu"
+          ? t('newwork.subtitleSelect', 'Odaberite tip klijenta za koji bilježite sate')
+          : t('newwork.subtitleForm', 'Evidentirajte sate i obračunajte zaradu')
       }
       icon={<Clock className="w-5 h-5" />}
     >
@@ -200,7 +197,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
       {modalMode === 'select' && (
         <div className="space-y-4 py-2">
           <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
-            Odaberite kako želite evidentirati ovaj radni posao:
+            {t('newwork.selectPrompt', 'Odaberite kako želite evidentirati ovaj radni posao:')}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -221,10 +218,10 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
                 <Users className="w-5 h-5" />
               </div>
               <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                Stalni klijent
+                {t('newwork.permanentClient', 'Stalni klijent')}
               </h4>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Klijenti koje već imate sačuvanje u bazi i sa definisanom tarifom.
+                {t('newwork.permanentClientDesc', 'Klijenti koje već imate sačuvane u bazi i sa definisanom tarifom.')}
               </p>
             </button>
 
@@ -238,10 +235,10 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
                 <Briefcase className="w-5 h-5" />
               </div>
               <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                Povremeni klijent
+                {t('newwork.temporaryClient', 'Povremeni klijent')}
               </h4>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Brzi ili jednokratni unos bez kreiranja stalnog profila u bazi.
+                {t('newwork.temporaryClientDesc', 'Brzi ili jednokratni unos bez kreiranja stalnog profila u bazi.')}
               </p>
             </button>
           </div>
@@ -257,7 +254,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
             onClick={() => setModalMode('select')}
             className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 mb-1"
           >
-            <ChevronLeft className="w-4 h-4" /> Promijeni tip klijenta
+            <ChevronLeft className="w-4 h-4" /> {t('newwork.changeClientType', 'Promijeni tip klijenta')}
           </button>
 
           {errorMessage && (
@@ -273,7 +270,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Klijent <span className="text-rose-500">*</span>
+                    {t('newwork.clientLabel', 'Klijent')} <span className="text-rose-500">*</span>
                   </label>
                   <button
                     type="button"
@@ -283,7 +280,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
                     }}
                     className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
                   >
-                    <Plus className="w-3 h-3" /> Novi klijent
+                    <Plus className="w-3 h-3" /> {t('newwork.newClientBtn', 'Novi klijent')}
                   </button>
                 </div>
                 <div className="relative">
@@ -296,7 +293,6 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
                     required
                     className="input-field pl-10 pr-8 font-medium appearance-none cursor-pointer"
                   >
-                    {/* SAMO IME KLIJENTA - bez zagrada i cijene */}
                     {clients.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -309,16 +305,17 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
               {/* Tip obračuna za stalnog klijenta */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Tip obračuna <span className="text-slate-400">(za ovaj unos)</span>
+                  {t('newwork.billingType', 'Tip obračuna')}{' '}
+                  <span className="text-slate-400 font-normal">({t('newwork.forThisEntry', 'za ovaj unos')})</span>
                 </label>
                 <select
                   value={permRateType}
                   onChange={(e) => setPermRateType(e.target.value as 'hourly' | 'daily' | 'service')}
                   className="input-field text-sm appearance-none cursor-pointer"
                 >
-                  <option value="hourly">Po satu</option>
-                  <option value="daily">Dnevno / Fiksno</option>
-                  <option value="service">Po usluzi</option>
+                  <option value="hourly">{t('newwork.hourly', 'Po satu')}</option>
+                  <option value="daily">{t('newwork.daily', 'Dnevno / Fiksno')}</option>
+                  <option value="service">{t('newwork.perService', 'Po usluzi')}</option>
                 </select>
               </div>
             </div>
@@ -329,7 +326,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Naziv klijenta / posla <span className="text-rose-500">*</span>
+                  {t('newwork.clientJobName', 'Naziv klijenta / posla')} <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -339,7 +336,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
                     type="text"
                     value={tempClientName}
                     onChange={(e) => setTempClientName(e.target.value)}
-                    placeholder="Npr. Popravka ograde - Marko"
+                    placeholder={t('newwork.tempClientPlaceholder', 'Npr. Popravka ograde - Marko')}
                     required
                     className="input-field pl-10 text-sm"
                   />
@@ -350,7 +347,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Iznos tarife (€)
+                    {t('newwork.rateAmount', 'Iznos tarife (€)')}
                   </label>
                   <input
                     type="number"
@@ -363,16 +360,16 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Tip obračuna
+                    {t('newwork.billingType', 'Tip obračuna')}
                   </label>
                   <select
                     value={tempRateType}
                     onChange={(e) => setTempRateType(e.target.value as 'hourly' | 'daily' | 'service')}
                     className="input-field text-sm appearance-none cursor-pointer"
                   >
-                    <option value="hourly">Po satu</option>
-                    <option value="daily">Dnevno / Fiksno</option>
-                    <option value="service">Po usluzi</option>
+                    <option value="hourly">{t('newwork.hourly', 'Po satu')}</option>
+                    <option value="daily">{t('newwork.daily', 'Dnevno / Fiksno')}</option>
+                    <option value="service">{t('newwork.perService', 'Po usluzi')}</option>
                   </select>
                 </div>
               </div>
@@ -382,7 +379,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
           {/* ----- ZAJEDNIČKA POLJA (Datum, Vrijeme OD/DO) ----- */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Datum rada <span className="text-rose-500">*</span>
+              {t('newwork.workDate', 'Datum rada')} <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -393,7 +390,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
                 value={workDate}
                 onChange={(e) => setWorkDate(e.target.value)}
                 required
-                className="input-field pl-10"
+                className="input-field pl-10 cursor-pointer"
               />
             </div>
           </div>
@@ -401,7 +398,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Vrijeme Od <span className="text-rose-500">*</span>
+                {t('newwork.timeFrom', 'Vrijeme Od')} <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -412,14 +409,14 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
                   value={timeFrom}
                   onChange={(e) => setTimeFrom(e.target.value)}
                   required
-                  className="input-field pl-8 text-sm"
+                  className="input-field pl-8 text-sm cursor-pointer"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Vrijeme Do <span className="text-rose-500">*</span>
+                {t('newwork.timeTo', 'Vrijeme Do')} <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -430,7 +427,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
                   value={timeTo}
                   onChange={(e) => setTimeTo(e.target.value)}
                   required
-                  className="input-field pl-8 text-sm"
+                  className="input-field pl-8 text-sm cursor-pointer"
                 />
               </div>
             </div>
@@ -440,7 +437,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
           <div className="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-900/60 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-indigo-900/70 dark:text-indigo-300 font-medium">
-                Ukupno radno vrijeme:
+                {t('newwork.totalHours', 'Ukupno radno vrijeme:')}
               </span>
               <span className="font-bold text-indigo-950 dark:text-white bg-white dark:bg-slate-900 px-2.5 py-0.5 rounded-lg border border-indigo-100 dark:border-indigo-900">
                 {formatMinutesToHours(totalMinutes)} ({totalMinutes} min)
@@ -449,10 +446,10 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
 
             <div className="flex items-center justify-between text-xs pt-1.5 border-t border-indigo-100 dark:border-indigo-900/50">
               <span className="text-indigo-900/70 dark:text-indigo-300 font-medium">
-                Izračunata zarada ({
+                {t('newwork.calculatedEarned', 'Izračunata zarada')} ({
                   modalMode === 'permanent'
-                    ? (selectedClient?.rate_type === 'hourly' ? 'po satu' : 'dnevna tarifa')
-                    : (tempRateType === 'hourly' ? 'po satu' : 'dnevna tarifa')
+                    ? (selectedClient?.rate_type === 'hourly' ? t('newwork.rateTypeHourly', 'po satu') : t('newwork.rateTypeDaily', 'dnevna tarifa'))
+                    : (tempRateType === 'hourly' ? t('newwork.rateTypeHourly', 'po satu') : t('newwork.rateTypeDaily', 'dnevna tarifa'))
                 }):
               </span>
               <span className="text-base font-extrabold text-indigo-600 dark:text-indigo-400">
@@ -464,7 +461,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
           {/* Opcionalna bilješka / opis */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Bilješka posla (opcionalno)
+              {t('newwork.noteLabel', 'Bilješka posla (opcionalno)')}
             </label>
             <div className="relative">
               <div className="absolute top-3 left-3 text-slate-400 pointer-events-none">
@@ -473,7 +470,7 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Opis posla ili dodatne napomene..."
+                placeholder={t('newwork.notePlaceholder', 'Opis posla ili dodatne napomene...')}
                 rows={2}
                 className="input-field pl-10 text-xs sm:text-sm py-2.5 resize-none"
               />
@@ -489,12 +486,12 @@ export const NewWorkLogModal: React.FC<NewWorkLogModalProps> = ({
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Spremanje unosa...</span>
+                <span>{t('newwork.saving', 'Spremanje unosa...')}</span>
               </>
             ) : (
               <>
                 <Plus className="w-4 h-4" />
-                <span>Upiši radne sate</span>
+                <span>{t('newwork.submitBtn', 'Upiši radne sate')}</span>
               </>
             )}
           </button>

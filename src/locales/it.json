@@ -74,6 +74,33 @@
     "confirmDelete": "Sei sicuro di voler eliminare questo inserimento di lavoro?"
   },
   "agenda": {
+    "prev_month": "Mese precedente",
+    "next_month": "Mese successivo",
+    "selected_date": "Data selezionata",
+    "schedule_term_for_day": "Pianifica appuntamento per questo giorno",
+    "loading": "Caricamento appuntamenti...",
+    "no_events": "Nessun appuntamento programmato per questo giorno",
+    "no_events_desc": "Clicca sul pulsante sopra per programmare un nuovo lavoro presso un cliente.",
+    "temp_client": "Cliente occasionale",
+    "client_fallback": "Cliente",
+    "status_completed": "Completato e registrato",
+    "status_scheduled": "Programmato",
+    "status_cancelled": "Annullato",
+    "type_hourly": "All'ora",
+    "type_fixed": "Fisso",
+    "convert_btn": "Converti in registro ore",
+    "delete_btn": "Elimina appuntamento",
+    "week_mon": "Lun",
+    "week_tue": "Mar",
+    "week_wed": "Mer",
+    "week_thu": "Gio",
+    "week_fri": "Ven",
+    "week_sat": "Sab",
+    "week_sun": "Dom",
+    "toast_converted": "L'appuntamento è stato completato con successo e trasferito nel registro ore!",
+    "toast_convert_failed": "Conversione nel registro ore non riuscita.",
+    "toast_deleted": "L'appuntamento è stato eliminato dal calendario.",
+    "toast_delete_failed": "Eliminazione dell'appuntamento non riuscita.",
     "title": "Calendario & Agenda di Lavoro",
     "subtitle": "Pianifica i prossimi impegni, gli ordini di lavoro e convertili in ore lavorate con un solo click",
     "addNew": "Pianifica Nuovo Lavoro",
@@ -86,6 +113,49 @@
     "client": "Cliente",
     "notes": "Note"
   },
+
+  "newagenda": {
+      "title": "Prenota nuovo appuntamento",
+      "subtitle": "Pianifica lavori e appuntamenti con i clienti nel calendario",
+      "permanentClient": "Cliente fisso",
+      "temporaryClient": "Cliente occasionale",
+      "noClients": "Non hai clienti fissi salvati.",
+      "addFirstClient": "Aggiungi il primo cliente",
+      "clientLabel": "Cliente",
+      "newClientBtn": "Nuovo cliente",
+      "agreedRate": "Tariffa concordata cliente:",
+      "perHour": "ora",
+      "perDay": "giorno",
+      "billingType": "Tipo di tariffa",
+      "forThisEvent": "(per questo appuntamento)",
+      "hourly": "All'ora",
+      "daily": "Giornaliero / Fisso",
+      "perService": "Per servizio",
+      "clientJobName": "Nome cliente / lavoro",
+      "tempClientPlaceholder": "Es. Riparazione recinzione - Marco",
+      "rateAmount": "Importo tariffa (€)",
+      "jobDate": "Data del lavoro",
+      "timeFrom": "Ora inizio",
+      "timeTo": "Ora fine",
+      "jobDescription": "Descrizione lavoro / compito",
+      "closeTemplates": "Chiudi modelli",
+      "frequentTemplates": "Modelli frequenti",
+      "descPlaceholder": "Es. Stiratura e pulizia generale del soggiorno...",
+      "selectTemplateHeader": "Seleziona un modello per la compilazione automatica:",
+      "defaultDesc1": "Pulizia e stiratura",
+      "defaultDesc2": "Pulizia uffici",
+      "plannedDuration": "Durata prevista:",
+      "expectedEarnings": "Guadagno previsto:",
+      "submitting": "Prenotazione in corso...",
+      "submitBtn": "Prenota appuntamento nel calendario",
+      "errSelectClient": "Seleziona un cliente dalla lista.",
+      "errEnterClientName": "Inserisci il nome del cliente.",
+      "errSelectDate": "Seleziona la data dell'appuntamento.",
+      "errSelectTime": "Seleziona l'ora di inizio e di fine.",
+      "errTimeOrder": "L'ora di fine deve essere successiva all'ora di inizio.",
+      "errEnterDescription": "Inserisci la descrizione del lavoro.",
+      "errSubmit": "Errore durante la prenotazione dell'appuntamento."
+    },
   "settings": {
     "title": "Impostazioni",
     "subtitle": "Gestisci il tuo profilo, il tema dell'app, la lingua e le opzioni di sicurezza",
@@ -357,7 +427,253 @@
     "userFallback": "Utente",
     "pdfClientSuffix": " (Cliente: {{client}})",
     "pdfSearchSuffix": " (Ricerca: {{query}})"
+  },
+
+  "login": {
+  "title": "Accedi al tuo account WorkOra",
+  "subtitle": "Inserisci le tue credenziali per monitorare le ore e i guadagni",
+  "errors": {
+    "requiredFields": "Si prega di compilare tutti i campi obbligatori.",
+    "loginFailed": "Accesso non riuscito. Controlla i tuoi dati."
+  },
+  "demo": {
+    "note": "Nota:",
+    "text": "L'applicazione è in modalità demo. Puoi inserire qualsiasi email e password per accedere."
+  },
+  "email": "Indirizzo email",
+  "emailPlaceholder": "nome@esempio.it",
+  "password": "Password",
+  "forgotPassword": "Hai dimenticato la password?",
+  "hidePassword": "Nascondi password",
+  "showPassword": "Mostra password",
+  "loggingIn": "Accesso in corso...",
+  "submit": "Accedi",
+  "noAccount": "Non hai un account?",
+  "register": "Registrati"
+},
+
+"registerModal": {
+  "title": "Registrazione su WorkOra",
+  "subtitle": "Inizia a monitorare i tuoi lavori e le tue ore lavorative in pochi secondi",
+  "errors": {
+    "fillAllFields": "Si prega di compilare tutti i campi.",
+    "passwordMinLength": "La password deve contenere almeno 6 caratteri.",
+    "passwordsDoNotMatch": "Le password non coincidono. Si prega di verificare l'inserimento.",
+    "acceptTerms": "È necessario accettare i termini di utilizzo per continuare.",
+    "registrationError": "Si è verificato un errore durante la registrazione."
+  },
+  "fields": {
+    "fullName": "Nome e Cognome",
+    "fullNamePlaceholder": "Es. Mario Rossi",
+    "email": "Indirizzo e-mail",
+    "emailPlaceholder": "nome@esempio.it",
+    "password": "Password (min. 6 caratteri)",
+    "confirmPassword": "Conferma password",
+    "hidePassword": "Nascondi password",
+    "showPassword": "Mostra password"
+  },
+  "terms": {
+    "accept": "Accetto i ",
+    "termsLink": "termini di utilizzo",
+    "and": " e l'",
+    "privacyLink": "informativa sulla privacy",
+    "appSuffix": " dell'applicazione WorkOra."
+  },
+  "buttons": {
+    "creatingAccount": "Creazione account in corso...",
+    "register": "Registrati"
+  },
+  "footer": {
+    "alreadyHaveAccount": "Hai già un account?",
+    "login": "Accedi"
+  }
+},
+
+"resetPassword": {
+  "title": "Recupero password",
+  "subtitle": "Inserisci l'e-mail associata al tuo account per inviare il link",
+  "errors": {
+    "enterEmail": "Si prega di inserire il proprio indirizzo e-mail.",
+    "sendFailed": "Invio delle istruzioni di ripristino non riuscito."
+  },
+  "success": {
+    "title": "Link inviato!",
+    "description": "Abbiamo inviato le istruzioni per reimpostare la password a <1>{{email}}</1>. Controlla la tua casella di posta (o la cartella spam).",
+    "backToLogin": "Torna al login"
+  },
+  "fields": {
+    "email": "Indirizzo e-mail",
+    "emailPlaceholder": "nome@esempio.it"
+  },
+  "buttons": {
+    "sending": "Invio link in corso...",
+    "submit": "Invia link di ripristino",
+    "backToLogin": "Torna al login"
+  }
+},
+
+"welcomeCard": {
+  "title": "Benvenuto su WorkOra, {{name}}!",
+  "subtitle": "Il tuo account è stato creato con successo ed è attivo",
+  "defaultUser": "Utente",
+  "badge": {
+    "verifiedSession": "Sessione verificata"
+  },
+  "nextStepsTitle": "Cosa puoi fare ora:",
+  "features": {
+    "pwa": {
+      "title": "Installa l'applicazione sulla schermata home",
+      "description": "Goditi la velocità e l'esperienza di un'app nativa senza dover andare su Google Play o App Store."
+    },
+    "offline": {
+      "title": "Funzionamento in modalità offline",
+      "description": "I tuoi dati principali e le impostazioni rimangono accessibili anche quando perdi la connessione a Internet."
+    },
+    "security": {
+      "title": "Protezione sicura con Supabase",
+      "description": "Il tuo account è protetto dai più moderni standard industriali di crittografia."
+    }
+  },
+  "buttons": {
+    "goToDashboard": "Vai alla Dashboard"
+  }
+},
+
+ 
+  "privacy": {
+    "title": "Informativa sulla Privacy",
+    "subtitle": "Come WorkOra protegge, elabora e conserva i tuoi dati personali",
+    "banner": {
+      "gdpr": "GDPR & Protezione dei dati personali",
+      "updated": "Aggiornato: 2026"
+    },
+    "section1": {
+      "title": "Raccolta dei dati",
+      "desc": "WorkOra rispetta il principio della minimizzazione dei dati. Raccogliamo esclusivamente le informazioni necessarie per il funzionamento del registro:",
+      "account": "Dati dell'account:",
+      "accountDesc": "Il tuo nome e cognome, e un indirizzo email valido (necessario per l'accesso e l'invio del codice di ripristino).",
+      "business": "Inserimenti aziendali:",
+      "businessDesc": "I nomi dei tuoi clienti, tariffe orarie, tariffe fisse, data di lavoro, ore registrate e brevi note sui lavori."
+    },
+    "section2": {
+      "title": "Archiviazione e Sicurezza (Supabase & RLS)",
+      "desc": "Tutti i tuoi dati sono archiviati in modo sicuro nel database cloud su licenza Supabase (PostgreSQL). Viene applicato un rigoroso protocollo Row Level Security (RLS) a livello di database: questo garantisce che nessuno tranne te, né qualsiasi altro utente del sistema, possa visualizzare, cercare o modificare i tuoi clienti, le ore e i guadagni. Le password vengono crittografate con algoritmi crittografici avanzati e non vengono memorizzate in formato leggibile."
+    },
+    "section3": {
+      "title": "Utilizzo dei dati",
+      "desc": "I tuoi dati vengono utilizzati esclusivamente per fornire servizi all'interno dell'applicazione WorkOra (calcolo delle ore, generazione di report PDF, visualizzazione nel calendario). Non vendiamo, affittiamo o condividiamo mai i tuoi dati personali o aziendali con terze parti, agenzie di marketing o inserzionisti."
+    },
+    "section4": {
+      "title": "Cookie e archiviazione locale PWA",
+      "desc": "L'applicazione non utilizza cookie di marketing invasivi di terze parti. Viene utilizzata l'archiviazione locale del tuo browser (localStorage e CacheStorage) esclusivamente per:",
+      "item1": "Memorizzare il tema di visualizzazione selezionato (Tema chiaro / scuro).",
+      "item2": "Mantenere la tua sessione di autenticazione sicura.",
+      "item3": "Consentire il funzionamento dell'app senza connessione Internet (Modalità PWA Offline)."
+    },
+    "section5": {
+      "title": "Diritti dell'utente (Diritto di cancellazione e accesso)",
+      "desc": "In conformità con i moderni standard sulla protezione della privacy, hai il diritto in qualsiasi momento di visualizzare tutte le voci, scaricarle in formato PDF, modificarle o richiedere la cancellazione permanente del tuo profilo utente e di tutti i dati inseriti relativi a ore e clienti."
+   },
+    "section6": {
+      "title": "Contatto per domande sulla privacy",
+      "desc": "Per qualsiasi domanda relativa alla protezione della privacy o richieste di cancellazione dei dati, puoi contattarci tramite la piattaforma ufficiale del nostro team di sviluppo:",
+      "link": "Portale Orizon-AIX (orizon-aix.com)"
+    },
+    "acceptAndClose": "Accetto e chiudi"
+  },
+  
+  "terms": {
+    "title": "Termini e Condizioni",
+    "subtitle": "Termini ufficiali di utilizzo dell'applicazione WorkOra PWA",
+    "meta": {
+      "version": "Versione: 2026.1 (UE)",
+      "effectiveDate": "Valido dal: 01.01.2026"
+    },
+    "section1": {
+      "title": "Accettazione dei termini",
+      "desc": "Accedendo e utilizzando l'applicazione WorkOra (di seguito: \"Applicazione\"), confermi di aver letto, compreso e accettato pienamente i presenti Termini di utilizzo. Se non sei d'accordo con qualsiasi disposizione di questi termini, ti preghiamo di non utilizzare questa applicazione."
+    },
+    "section2": {
+      "title": "Descrizione del servizio",
+      "desc": "WorkOra è una Progressive Web App (PWA) specializzata per lavoratori autonomi, artigiani, freelancer e fornitori di servizi. L'applicazione consente la registrazione digitale delle ore lavorative per cliente, la pianificazione del lavoro tramite calendario (agenda), il calcolo matematico automatico dei guadagni su base oraria o giornaliera e la generazione di report mensili PDF ufficiali."
+    },
+    "section3": {
+      "title": "Account utente e sicurezza",
+      "desc": "Per accedere a tutte le funzionalità di tracciamento è necessario creare un account utente. L'utente è l'unico e interamente responsabile del mantenimento della riservatezza della propria password di accesso e dell'indirizzo email. Tutte le azioni eseguite nell'ambito del tuo account utente sono considerate azioni tue. In caso di sospetto accesso non autorizzato, sei tenuto a cambiare immediatamente la password o a notificarcelo."
+    },
+    "section4": {
+      "title": "Accuratezza dei dati e responsabilità",
+      "desc": "L'utente inserisce autonomamente ore lavorative, tariffe orarie, tariffe fisse giornaliere e nomi dei propri clienti. WorkOra e il suo proprietario non si assumono alcuna responsabilità per inserimenti errati da parte dell'utente, errori nei calcoli finanziari reciproci tra l'utente e i suoi clienti, né per omissioni contabili, fiscali o legali derivanti dall'uso dei report PDF esportati."
+    },
+    "section5": {
+      "title": "Proprietà intellettuale",
+      "desc": "Tutti i diritti d'autore, marchi, identità visiva, logo, design e codice software dell'applicazione WorkOra sono di proprietà intellettuale esclusiva del team di sviluppo Orizon-AIX. È severamente vietata la copia non autorizzata, il reverse engineering, la distribuzione o la rivendita di qualsiasi parte dell'applicazione senza esplicita autorizzazione scritta."
+    },
+    "section6": {
+      "title": "Modifiche ai termini",
+      "desc": "Ci riserviamo il diritto discrezionale di modificare o integrare i presenti Termini di utilizzo in qualsiasi momento per adeguarli alle normative di legge o per introdurre nuove funzionalità. Il continuo utilizzo dell'applicazione dopo la pubblicazione dei termini modificati costituisce l'accettazione degli stessi."
+    },
+    "understandAndAccept": "Ho capito e accetto"
+  },
+
+  
+  "pwa": {
+    "installed": "Installato!",
+    "installTitle": "Installa come app mobile",
+    "installBtn": "Installa PWA",
+    "installIosTitle": "Installa su dispositivo iOS",
+    "installShortBtn": "Installa",
+    "iosGuide": {
+      "title": "Installazione su iPhone / iPad",
+      "subtitle": "Solo 2 semplici passaggi in Safari",
+      "step1": "Clicca sull'icona {{icon}} nella barra in basso di Safari.",
+      "shareWord": "Condividi (Share)",
+      "step2": "Scorri verso il basso e seleziona \"Aggiungi alla schermata Home\" (Add to Home Screen).",
+      "understandBtn": "Ho capito"
+    }
+  },
+
+  
+  "newwork": {
+    "titleSelect": "Nuovo inserimento ore",
+    "titlePermanent": "Inserimento per cliente fisso",
+    "titleTemporary": "Inserimento per cliente occasionale",
+    "subtitleSelect": "Seleziona il tipo di cliente per cui registrare le ore",
+    "subtitleForm": "Registra le ore e calcola il guadagno",
+    "selectPrompt": "Scegli come desideri registrare questo lavoro:",
+    "permanentClient": "Cliente fisso",
+    "permanentClientDesc": "Clienti già salvati nel database con tariffa definita.",
+    "temporaryClient": "Cliente occasionale",
+    "temporaryClientDesc": "Inserimento rapido o occasionale senza creare un profilo fisso.",
+    "changeClientType": "Cambia tipo di cliente",
+    "clientLabel": "Cliente",
+    "newClientBtn": "Nuovo cliente",
+    "billingType": "Tipo di calcolo",
+    "forThisEntry": "per questo inserimento",
+    "hourly": "All'ora",
+    "daily": "Giornaliero / Fisso",
+    "perService": "Per servizio",
+    "clientJobName": "Nome cliente / lavoro",
+    "tempClientPlaceholder": "Es. Riparazione recinzione - Marco",
+    "rateAmount": "Importo tariffa (€)",
+    "workDate": "Data del lavoro",
+    "timeFrom": "Ora inizio",
+    "timeTo": "Ora fine",
+    "totalHours": "Tempo totale lavorato:",
+    "calculatedEarned": "Guadagno calcolato",
+    "rateTypeHourly": "all'ora",
+    "rateTypeDaily": "tariffa giornaliera",
+    "noteLabel": "Nota di lavoro (opzionale)",
+    "notePlaceholder": "Descrizione del lavoro o note aggiuntive...",
+    "saving": "Salvataggio in corso...",
+    "submitBtn": "Registra ore lavorative",
+    "errSelectClient": "Seleziona un cliente dalla lista.",
+    "errEnterClientName": "Inserisci il nome del cliente o del lavoro.",
+    "errSelectDate": "Seleziona la data del lavoro.",
+    "errSelectTime": "Inserisci l'ora di inizio e fine lavoro.",
+    "errTimeOrder": "L'ora di fine deve essere successiva all'ora di inizio.",
+    "errSave": "Errore durante il salvataggio del registro di lavoro."
   }
 
-
-}
+  }
+ 

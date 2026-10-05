@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Mail, KeyRound, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { ModalWrapper } from '../ui/ModalWrapper';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +16,8 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
   onOpenLogin,
 }) => {
   const { resetPassword } = useAuth();
+  const { t } = useTranslation();
+
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -25,7 +28,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
     setErrorMessage('');
 
     if (!email.trim()) {
-      setErrorMessage('Molimo unesite Vašu email adresu.');
+      setErrorMessage(t('resetPassword.errors.enterEmail'));
       return;
     }
 
@@ -36,7 +39,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
     if (result.success) {
       setIsSuccess(true);
     } else {
-      setErrorMessage(result.error || 'Nije uspjelo slanje instrukcija za reset.');
+      setErrorMessage(result.error || t('resetPassword.errors.sendFailed'));
     }
   };
 
@@ -52,8 +55,8 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
     <ModalWrapper
       isOpen={isOpen}
       onClose={onClose}
-      title="Oporavak lozinke"
-      subtitle="Unesite email povezan sa Vašim računom za slanje linka"
+      title={t('resetPassword.title')}
+      subtitle={t('resetPassword.subtitle')}
       icon={<KeyRound className="w-5 h-5" />}
     >
       {isSuccess ? (
@@ -63,10 +66,14 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
           </div>
           <div>
             <h4 className="text-base font-bold text-slate-900 dark:text-white">
-              Link je poslan!
+              {t('resetPassword.success.title')}
             </h4>
             <p className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-              Poslali smo instrukcije za ponovno postavljanje lozinke na <strong>{email}</strong>. Provjerite Vašu pristiglu poštu (ili spam folder).
+              <Trans
+                i18nKey="resetPassword.success.description"
+                values={{ email }}
+                components={[<span key="0" />, <strong key="1" />]}
+              />
             </p>
           </div>
           <button
@@ -74,7 +81,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
             onClick={handleReturnToLogin}
             className="w-full btn-primary text-sm py-2.5"
           >
-            Nazad na prijavu
+            {t('resetPassword.success.backToLogin')}
           </button>
         </div>
       ) : (
@@ -89,7 +96,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Email adresa <span className="text-rose-500">*</span>
+              {t('resetPassword.fields.email')} <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -99,7 +106,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ime@primjer.ba"
+                placeholder={t('resetPassword.fields.emailPlaceholder')}
                 required
                 className="input-field pl-10"
                 autoComplete="email"
@@ -115,10 +122,10 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Slanje linka...</span>
+                <span>{t('resetPassword.buttons.sending')}</span>
               </>
             ) : (
-              <span>Pošalji link za reset</span>
+              <span>{t('resetPassword.buttons.submit')}</span>
             )}
           </button>
 
@@ -129,7 +136,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
               className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Povratak na prijavu</span>
+              <span>{t('resetPassword.buttons.backToLogin')}</span>
             </button>
           </div>
         </form>
